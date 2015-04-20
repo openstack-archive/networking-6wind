@@ -1,0 +1,183 @@
+#!/bin/bash
+#
+# Copyright 2015 6WIND S.A.
+
+function install_qemu_libvirt {
+    # ubuntu 14.04 has too old qemu/libvirt version to support vhostuser
+    # redhat 7.1 : ok
+    if is_ubuntu; then
+        install_package software-properties-common
+        sudo  http_proxy=${http_proxy:-} https_proxy=${https_proxy:-} \
+            no_proxy=${no_proxy:-} \
+            add-apt-repository -y ppa:6wind/virt-mq-ppa
+        install_package libvirt-bin python-libvirt qemu qemu-system-x86
+    fi
+}
+
+function install_fast_path_deb {
+    cd $FP_PKG_DIR/..
+    DEB_DIR=`basename $FP_PKG_DIR`
+    dpkg-scanpackages $DEB_DIR | gzip > $DEB_DIR/Packages.gz
+    sudo mkdir -p /etc/apt/sources.list.d
+    echo "deb file://$PWD $DEB_DIR/" |  sudo tee /etc/apt/sources.list.d/6wind.list
+    # allow unauthenticated packages
+    # TODO: create an authenticated local repo
+    echo 'APT::Get::AllowUnauthenticated 1;' | sudo tee  /etc/apt/apt.conf.d/02unauthenticated
+    sudo apt-get remove -y openvswitch-switch openvswitch-common
+    sudo apt-get update
+    sudo apt-get install -y  \
+        $(ls $DEB_DIR/*.deb | sed -r "s,.*/([^/_]+)_.*$,\1,")
+}
+
+function uninstall_fast_path_deb {
+    cd $FP_PKG_DIR/..
+    DEB_DIR=`basename $FP_PKG_DIR`
+    sudo apt-get remove -y  \
+        $(ls $DEB_DIR/*.deb | sed -r "s,.*/([^/_]+)_.*$,\1,")
+    sudo rm /etc/apt/sources.list.d/6wind.list
+    sudo apt-get update
+}
+
+function install_fast_path_rpm {
+    echo "TODO"
+    exit 1
+}
+
+function uninstall_fast_path_rpm {
+    echo "TODO"
+    exit 1
+}
+
+function install_fast_path {
+    install_qemu_libvirt
+    if is_ubuntu; then
+        install_fast_path_deb
+    elif is_fedora; then
+        install_fast_path_rpm
+    else
+        exit_distro_not_supported "fast path not supported on this distrib"
+    fi
+}
+
+function uninstall_fast_path {
+    if is_ubuntu; then
+        uninstall_fast_path_deb
+    elif is_fedora; then
+        uninstall_fast_path_rpm
+    fi
+}
+
+function get_pci_addr {
+    local pci_addr=$(ethtool -i $1 | grep bus-info  | awk '{print $2}')
+    echo $pci_addr
+}
+
+function write_fast_path_conf {
+    FP_CONF="/usr/local/etc/fast-path.env"
+    sudo cp /usr/local/etc/fast-path.env.tmpl $FP_CONF
+
+    sudo sed "s~#*: \${FP_MASK:=.*~: \${FP_MASK:=$FP_MASK}~" -i $FP_CONF
+    sudo sed "s~#*: \${NB_MEM_CHANNELS:=.*~: \${NB_MEM_CHANNELS:=$FP_NB_MEM_CHANNELS}~" -i $FP_CONF
+    sudo sed "s~#*: \${NB_HUGEPAGES:=.*~: \${NB_HUGEPAGES:=$FP_NB_HUGEPAGES}~" -i $FP_CONF
+    sudo sed "s~#*: \${FP_MEMORY:=.*~: \${FP_MEMORY:=$FP_MEMORY}~" -i $FP_CONF
+    sudo sed "s~#*: \${NB_MBUF:=.*~: \${NB_MBUF:=$FP_NB_MBUF}~" -i $FP_CONF
+
+    EAL_OPTIONS=" -d /usr/local/dpdk-addons/lib/librte_pmd_vhost.so "
+    nb_ifaces=0
+    if [[ -n $OVS_PHYSICAL_INTERFACE ]]; then
+        pci_addr+=$(get_pci_addr $OVS_PHYSICAL_INTERFACE)
+        if [[ -n $pci_addr ]]; then
+            EAL_OPTIONS+=" -w$pci_addr"
+            nb_ifaces=$((nb_ifaces+1))
+        fi
+    fi
+    if [[ -n $LB_PHYSICAL_INTERFACE ]]; then
+        pci_addr=$(get_pci_addr $LB_PHYSICAL_INTERFACE)
+        if [[ -n $pci_addr ]]; then
+            EAL_OPTIONS+=" -w$pci_addr"
+            nb_ifaces=$((nb_ifaces+1))
+        fi
+    fi
+    if [[ -n $PUBLIC_INTERFACE ]]; then
+        pci_addr=$(get_pci_addr $PUBLIC_INTERFACE)
+        if [[ -n $pci_addr ]]; then
+            EAL_OPTIONS+=" -w$pci_addr"
+            nb_ifaces=$((nb_ifaces+1))
+        fi
+    fi
+    if [[ $nb_ifaces == 0 ]]; then
+        # tell to dpdk to not unbind pci interfaces
+        EAL_OPTIONS+=" --no-pci"
+    fi
+    echo $EAL_OPTIONS
+    sudo sed "s~#*: \${EAL_OPTIONS:=.*~: \${EAL_OPTIONS:=$EAL_OPTIONS}~" \
+        -i $FP_CONF
+
+    FPNSDK_OPTIONS=""
+    if [[ $nb_ifaces == 0 ]]; then
+        # disable autoconfig
+        FPNSDK_OPTIONS+=" --rxq-per-port 0"
+    fi
+    # command to preallocate vhostuser ports
+    FPNSDK_OPTIONS+=" --vdevs driver=pmd-vhost,nb_devices=$FP_NB_VHOSTUSER_PORTS"
+    FPNSDK_OPTIONS+=",sockname=/tmp/vhost-socket%num%,ifname=tap_unused_"
+    sudo sed "s~#*: \${FPNSDK_OPTIONS:=.*~: \${FPNSDK_OPTIONS:=$FPNSDK_OPTIONS}~" -i $FP_CONF
+
+    CORE_PORT_MAPPING=""
+    list_ifaces=""
+    for (( nm_iface=0; nm_iface < $nb_ifaces; nm_iface++))
+    do
+        list_ifaces=$list_ifaces$nm_iface":"
+    done
+
+    if [[ -n $list_ifaces ]]; then
+        # remove last ':'
+        list_ifaces=${list_ifaces::-1}
+
+        for nm_core in `seq 0 $FP_MASK`;
+        do
+            coremask=$((1 << $nm_core))
+            if [[ ($(($coremask & FP_MASK)) != 0) ]]; then
+                CORE_PORT_MAPPING+="c$nm_core=$list_ifaces/"
+            fi
+        done
+        # remove last '/'
+        CORE_PORT_MAPPING=${CORE_PORT_MAPPING::-1}
+    fi
+    sudo sed "s~#*: \${CORE_PORT_MAPPING:=.*~: \${CORE_PORT_MAPPING:=$CORE_PORT_MAPPING}~" -i $FP_CONF
+
+    # disable cpuset to avoid conflict with nova
+    sudo sed "s~#*: \${CPUSET_ENABLE:=.*~: \${CPUSET_ENABLE:=0}~" \ -i /usr/local/etc/cpuset.env
+}
+
+function start_fast_path {
+    sudo fast-path.sh start
+    result=$(sudo fast-path.sh status)
+    if [[ $result == *"fail"* ]]; then
+        echo "Fail to start fast-path.sh, exit"
+        sudo fast-path.sh stop
+        exit 1
+    fi
+    sudo linux-fp-sync.sh start
+    result=$(sudo linux-fp-sync.sh status)
+    if [[ $result == *"fail"* ]]; then
+        echo "Fail to start linux-fp-sync.sh, exit"
+        sudo linux-fp-sync.sh stop
+        sudo fast-path.sh stop
+        exit 1
+    fi
+    sudo vrfd -s /usr/local/bin/linux-fp-sync-vrf.sh
+    if is_ubuntu; then
+        sudo service openvswitch-switch restart
+        sudo service libvirt-bin restart
+    else
+        sudo systemctl restart openvswitch-switch
+        sudo systemctl libvirtd restart
+    fi
+}
+
+function stop_fast_path {
+    sudo linux-fp-sync.sh stop
+    sudo fast-path.sh stop
+    sudo pkill -SIGQUIT vrfd
+}
