@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = networking_6wind
+omit = networking_6wind/openstack/*
+
+[report]
+ignore-errors = True
