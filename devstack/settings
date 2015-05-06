@@ -1,5 +1,9 @@
 # Copyright 2015 6WIND S.A.
 
+# use the branch under review for vif_plug_script
+NOVA_REPO=https://review.openstack.org/p/openstack/nova
+NOVA_BRANCH=refs/changes/70/162470/6
+
 # fast path settings
 FP_PKG_DIR=${FP_PKG_DIR:-$DEST/fp-delivery}
 FP_MASK=${FP_MASK:-0x4}
@@ -11,3 +15,9 @@ FP_NB_VHOSTUSER_PORTS=${FP_NB_VHOSTUSER_PORT:-20}
 
 # openvswitch settings
 OVS_PHYSICAL_INTERFACE=${OVS_PHYSICAL_INTERFACE:-''}
+
+# set ovs-fp mechanism driver
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovs-fp
+
+# disable security group and ovs hybrid for better networking performance
+Q_DISABLE_SECURITY=${Q_DISABLE_SECURITY:-False}

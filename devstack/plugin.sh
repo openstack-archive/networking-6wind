@@ -14,6 +14,9 @@
 # install_fast_path
 # write_fast_path_conf
 # start_fast_path
+# setup_develop networking-6wind
+# configure_nova_rootwrap
+# configure_ml2_for_fast_path
 # stop_fast_path
 
 # Save trace setting
@@ -22,6 +25,31 @@ set +o xtrace
 
 NET_6WIND_DIR=$DEST/networking-6wind
 NOVA_ROOTWRAP=$(get_rootwrap_location nova)
+
+function create_nova_rootwrap {
+    # copy 6wind.filers for vif_ovsfp_plug scripts
+    sudo cp $NET_6WIND_DIR/etc/nova/rootwrap.d/6wind.filters /etc/nova/rootwrap.d/.
+
+    # fast-path commands are install in /usr/local, so nova-rootwrap needs to
+    # be allowed to find the tools installed in /usr/local/bin.
+    iniset /etc/nova/rootwrap.conf DEFAULT exec_dirs \
+        "$(iniget /etc/nova/rootwrap.conf DEFAULT exec_dirs),/usr/local/bin"
+}
+
+function configure_ml2_for_fast_path {
+    if [[ "$Q_DISABLE_SECURITY" == "True" ]]; then
+        # disable firewall in nova
+        LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
+        iniset $NOVA_CONF DEFAULT firewall_driver $LIBVIRT_FIREWALL_DRIVER
+        inicomment $NOVA_CONF DEFAULT security_group_api
+        # disable firewall in neutron
+        iniset /$Q_PLUGIN_CONF_FILE securitygroup enable_security_group False
+        iniset /$Q_PLUGIN_CONF_FILE securitygroup firewall_driver neutron.agent.firewall.NoopFirewallDriver
+    elif [[ "$Q_USE_SECGROUP" == "True" ]]; then
+        iniset /$Q_PLUGIN_CONF_FILE securitygroup enable_ipset False
+        iniset $NEUTRON_CONF agent comment_iptables_rules False
+    fi
+}
 
 # main loop
 if is_service_enabled net-6wind; then
@@ -33,6 +61,14 @@ if is_service_enabled net-6wind; then
         fi
         write_fast_path_conf
         start_fast_path
+        setup_develop $DEST/networking-6wind
+    elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
+        if is_service_enabled nova; then
+            create_nova_rootwrap
+        fi
+        if is_service_enabled neutron; then
+            configure_ml2_for_fast_path
+        fi
     fi
 
     if [[ "$1" == "unstack" ]]; then
