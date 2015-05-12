@@ -1,0 +1,3 @@
+[Filters]
+fp-shmem-ports: CommandFilter, /usr/local/bin/fp-shmem-ports, root
+fp-cli: CommandFilter, /usr/local/bin/fp-cli, root
