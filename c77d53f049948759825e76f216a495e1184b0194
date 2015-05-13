@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Code-Review+2: Samuel Gauthier <samuel.gauthier@6wind.com>
+Workflow+1: Samuel Gauthier <samuel.gauthier@6wind.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 13 May 2015 15:40:58 +0000
+Reviewed-on: https://review.openstack.org/182712
+Project: stackforge/networking-6wind
+Branch: refs/heads/master
