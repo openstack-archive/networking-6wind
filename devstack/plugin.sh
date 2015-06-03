@@ -36,6 +36,17 @@ function create_nova_rootwrap {
         "$(iniget /etc/nova/rootwrap.conf DEFAULT exec_dirs),/usr/local/bin"
 }
 
+function configure_nova_for_vif_script {
+    # configure rootwrap to have permissions for vif-ovs-fp-plug
+    create_nova_rootwrap
+
+    # set vif_script_dir into nova.conf to run vif-ovs-fp-plug
+    SYS_PREFIX=$(python -c "import sys; print sys.prefix")
+    VIF_SCRIPT_DIR=$SYS_PREFIX"/libexec/nova/vif-plugins"
+
+    iniset $NOVA_CONF DEFAULT vif_script_dir $VIF_SCRIPT_DIR
+}
+
 function configure_ml2_for_fast_path {
     if [[ "$Q_DISABLE_SECURITY" == "True" ]]; then
         # disable firewall in nova
@@ -64,7 +75,7 @@ if is_service_enabled net-6wind; then
         setup_develop $DEST/networking-6wind
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         if is_service_enabled nova; then
-            create_nova_rootwrap
+            configure_nova_for_vif_script
         fi
         if is_service_enabled neutron; then
             configure_ml2_for_fast_path

@@ -2,7 +2,7 @@
 
 # use the branch under review for vif_plug_script
 NOVA_REPO=https://review.openstack.org/p/openstack/nova
-NOVA_BRANCH=refs/changes/70/162470/6
+NOVA_BRANCH=refs/changes/70/162470/9
 
 # fast path settings
 FP_PKG_DIR=${FP_PKG_DIR:-$DEST/fp-delivery}
