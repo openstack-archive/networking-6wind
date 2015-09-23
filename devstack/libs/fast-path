@@ -180,3 +180,9 @@ function stop_fast_path {
     sudo fast-path.sh stop
     sudo pkill -SIGQUIT vrfd
 }
+
+function set_hugepages_support {
+	for flavor_id in $(nova flavor-list | awk '{print $2}' | grep [0-9]); do
+		nova flavor-key $flavor_id set hw:mem_page_size=large
+	done
+}
