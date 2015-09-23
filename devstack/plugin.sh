@@ -69,6 +69,10 @@ if is_service_enabled net-6wind; then
         if is_service_enabled neutron; then
             configure_ml2_for_fast_path
         fi
+    elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
+        if is_service_enabled nova; then
+            set_hugepages_support
+        fi
     fi
 
     if [[ "$1" == "unstack" ]]; then
