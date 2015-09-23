@@ -51,6 +51,12 @@ function configure_ml2_for_fast_path {
     fi
 }
 
+function nova_set_hugepages_flavor {
+    for flavor_id in $(nova flavor-list | awk '{print $2}' | grep [0-9]); do
+        nova flavor-key $flavor_id set hw:mem_page_size=large
+    done
+}
+
 # main loop
 if is_service_enabled net-6wind; then
     source $NET_6WIND_DIR/devstack/libs/fast-path
@@ -68,6 +74,10 @@ if is_service_enabled net-6wind; then
         fi
         if is_service_enabled neutron; then
             configure_ml2_for_fast_path
+        fi
+    elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
+        if is_service_enabled nova; then
+            nova_set_hugepages_flavor
         fi
     fi
 

@@ -180,3 +180,4 @@ function stop_fast_path {
     sudo fast-path.sh stop
     sudo pkill -SIGQUIT vrfd
 }
+
