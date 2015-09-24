@@ -41,12 +41,12 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         sg_enabled = securitygroups_rpc.is_firewall_enabled()
         vif_details = {portbindings.CAP_PORT_FILTER: sg_enabled,
                        portbindings.OVS_HYBRID_PLUG: sg_enabled,
-                       constants.VIF_PLUGIN_SCRIPT: "vif-ovs-fp-plug"
+                       constants.VIF_DETAILS_VHOSTUSER_OVS_PLUG: True,
                        }
 
         SimpleAgentMechanismDriverBase.__init__(self,
                                                 n_constants.AGENT_TYPE_OVS,
-                                                constants.VIF_TYPE_VHOSTUSER,
+                                                portbindings.VIF_TYPE_VHOST_USER,
                                                 vif_details)
 
     def try_to_bind_segment_for_agent(self, context, segment, agent):
@@ -60,5 +60,5 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
     def _get_vif_details(self, context):
         vif_details = self.vif_details.copy()
         vif_vhostuser_socket = get_vif_vhostuser_socket(context.current['id'])
-        vif_details[constants.VIF_VHOSTUSER_SOCKET] = vif_vhostuser_socket
+        vif_details[portbindings.VHOST_USER_SOCKET] = vif_vhostuser_socket
         return vif_details
