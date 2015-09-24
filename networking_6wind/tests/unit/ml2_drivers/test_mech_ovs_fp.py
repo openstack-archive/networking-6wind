@@ -15,7 +15,6 @@
 
 from oslo_config import cfg
 
-from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
 from networking_6wind.ml2_drivers import mech_ovs_fp
 
@@ -26,11 +25,11 @@ from neutron.tests.unit.plugins.ml2.drivers.openvswitch.mech_driver import (
 
 
 class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
-    VIF_TYPE = constants.VIF_TYPE_VHOSTUSER
+    VIF_TYPE = portbindings.VIF_TYPE_VHOST_USER
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: True,
                    portbindings.OVS_HYBRID_PLUG: True,
-                   constants.VIF_PLUGIN_SCRIPT: "vif-ovs-fp-plug",
-                   constants.VIF_VHOSTUSER_SOCKET: get_vif_vhostuser_socket(
+                   portbindings.VHOST_USER_OVS_PLUG: True,
+                   portbindings.VHOST_USER_SOCKET: get_vif_vhostuser_socket(
                        base.PORT_ID)}
 
     def setUp(self):
@@ -43,8 +42,8 @@ class OVSFPMechanismSGDisabledBaseTestCase(
     OVSFPMechanismBaseTestCase):
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: False,
                    portbindings.OVS_HYBRID_PLUG: False,
-                   constants.VIF_PLUGIN_SCRIPT: "vif-ovs-fp-plug",
-                   constants.VIF_VHOSTUSER_SOCKET: get_vif_vhostuser_socket(
+                   portbindings.VHOST_USER_OVS_PLUG: True,
+                   portbindings.VHOST_USER_SOCKET: get_vif_vhostuser_socket(
                        base.PORT_ID)}
 
     def setUp(self):
