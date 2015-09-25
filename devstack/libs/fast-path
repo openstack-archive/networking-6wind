@@ -146,7 +146,7 @@ function write_fast_path_conf {
     sudo sed "s~#*: \${CORE_PORT_MAPPING:=.*~: \${CORE_PORT_MAPPING:=$CORE_PORT_MAPPING}~" -i $FP_CONF
 
     # disable cpuset to avoid conflict with nova
-    sudo sed "s~#*: \${CPUSET_ENABLE:=.*~: \${CPUSET_ENABLE:=0}~" \ -i /usr/local/etc/cpuset.env
+    sudo sed "s~#*: \${CPUSET_ENABLE:=.*~: \${CPUSET_ENABLE:=0}~" -i /usr/local/etc/cpuset.env
 }
 
 function start_fast_path {
