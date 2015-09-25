@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Maxime Leroy <maxime.leroy@6wind.com>
+Workflow+1: Maxime Leroy <maxime.leroy@6wind.com>
+Code-Review+1: venkatamahesh <venkatamaheshkotha@gmail.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 25 Sep 2015 10:20:37 +0000
+Reviewed-on: https://review.openstack.org/225867
+Project: stackforge/networking-6wind
+Branch: refs/heads/master
