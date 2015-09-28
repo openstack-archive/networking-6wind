@@ -17,7 +17,6 @@
 from __future__ import print_function
 
 import argparse
-import os
 import sys
 
 from oslo_concurrency import processutils
@@ -149,36 +148,37 @@ def parse_args():
     parser.add_argument('action', metavar='ACTION',
                         help='Action to perform with vif on the ovs bridge',
                         choices=['plug', 'unplug'])
+    parser.add_argument('vif_id', metavar='VIF_ID',
+                        help='Virtual interface id')
+    parser.add_argument('vif_address', metavar='VIF_ADDRESS',
+                        help='Virtual interface address')
+    parser.add_argument('vif_instance_id', metavar='VIF_INSTANCE_ID',
+                        help='Virtual interface instance id')
+    parser.add_argument('vif_vhostuser_socket',
+                        metavar='VIF_DETAILS_VHOSTUSER_SOCKET',
+                        help='Virtual interface vhostuser socket')
+    parser.add_argument('devname', metavar='VIF_DEVNAME',
+                        help='Devname')
+    parser.add_argument('ovs_interfaceid', metavar='VIF_INTERFACE_ID',
+                        help='Virtual interface id')
+    parser.add_argument('bridge_name', metavar='VIF_BRIDGE_NAME',
+                        help='Virtual interface bridge name')
+    parser.add_argument('ovs_hybrid_plug',
+                        metavar='VIF_DETAILS_OVS_HYBRID_PLUG',
+                        help='OVS hybrid plug')
+
     args = parser.parse_args()
 
     args.vif = {}
-
-    # mandatory environnement variable
-    args.vif['id'] = os.getenv('VIF_ID')
-    args.vif['address'] = os.getenv('VIF_ADDRESS')
-    args.vif['instance_id'] = os.getenv('VIF_INSTANCE_ID')
-    args.vif['vhostuser_socket'] = os.getenv('VIF_DETAILS_VHOSTUSER_SOCKET')
-
-    if args.vif['id'] is None:
-        parser.error('missing VIF_ID environment variable')
-    if args.vif['address'] is None:
-        parser.error('missing VIF_ADDRESS environment variable')
-    if args.vif['instance_id'] is None:
-        parser.error('missing VIF_INSTANCE_ID environment variable')
-    if args.vif['vhostuser_socket'] is None:
-        parser.error('missing VIF_DETAILS_VHOSTUSER_SOCKET'
-                     ' environment variable')
-
-    # optionnal environnement variable
-    default_devname = "tap" + args.vif['id'][:utils.NIC_NAME_LEN]
-    args.vif['devname'] = os.getenv('VIF_DEVNAME', default_devname)
-    args.vif['ovs_interfaceid'] = os.getenv('VIF_OVS_INTERFACEID',
-                                            args.vif['id'])
-    # TOFIX: bridge_name should be given by VIF_NETWORK_BRIDGE
-    args.vif['bridge_name'] = 'br-int'
-    args.vif['port_filter'] = os.getenv('VIF_DETAILS_PORTS_FILTER', 'false')
-    args.vif['ovs_hybrid_plug'] = os.getenv('VIF_DETAILS_OVS_HYBRID_PLUG',
-                                            'false')
+    args.vif['id'] = args.vif_id
+    args.vif['address'] = args.vif_address
+    args.vif['instance_id'] = args.vif_instance_id
+    args.vif['vhostuser_socket'] = args.vif_vhostuser_socket
+    args.vif['devname'] = args.devname
+    args.vif['ovs_interfaceid'] = args.ovs_interfaceid
+    args.vif['bridge_name'] = args.bridge_name
+    args.vif['port_filter'] = 'false'
+    args.vif['ovs_hybrid_plug'] = args.ovs_hybrid_plug
 
     return args
 

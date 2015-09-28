@@ -1,3 +1,4 @@
 [Filters]
+vif-ovs-fp-plug: CommandFilter, /usr/local/bin/vif-ovs-fp-plug, root
 fp-shmem-ports: CommandFilter, /usr/local/bin/fp-shmem-ports, root
 fp-cli: CommandFilter, /usr/local/bin/fp-cli, root

@@ -13,9 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# constants for 'vif_details'
-VIF_PLUGIN_SCRIPT = 'vif_plugin_script'
-
 # constants for the 'vif_type' field
 VIF_TYPE_VHOSTUSER = 'vhostuser'
 
