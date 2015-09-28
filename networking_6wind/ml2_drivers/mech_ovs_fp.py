@@ -41,7 +41,7 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         sg_enabled = securitygroups_rpc.is_firewall_enabled()
         vif_details = {portbindings.CAP_PORT_FILTER: sg_enabled,
                        portbindings.OVS_HYBRID_PLUG: sg_enabled,
-                       constants.VIF_PLUGIN_SCRIPT: "vif-ovs-fp-plug"
+                       portbindings.VHOST_USER_OVS_PLUG: True,
                        }
 
         SimpleAgentMechanismDriverBase.__init__(self,

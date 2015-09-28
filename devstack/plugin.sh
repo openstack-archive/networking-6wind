@@ -57,6 +57,11 @@ function nova_set_hugepages_flavor {
     done
 }
 
+function nova_enable_monkey_patch {
+	iniset $NOVA_CONF DEFAULT monkey_patch True
+	iniset $NOVA_CONF DEFAULT monkey_patch_modules nova.virt.libvirt.vif:networking_6wind.monkey_patch.vif.decorator
+}
+
 # main loop
 if is_service_enabled net-6wind; then
     source $NET_6WIND_DIR/devstack/libs/fast-path
@@ -71,6 +76,7 @@ if is_service_enabled net-6wind; then
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         if is_service_enabled nova; then
             create_nova_rootwrap
+            nova_enable_monkey_patch
         fi
         if is_service_enabled neutron; then
             configure_ml2_for_fast_path
