@@ -72,11 +72,6 @@ def unplug_ovs_vif_port(bridge, dev):
             bridge, dev, run_as_root=True)
 
 
-def rename_iface(name, new_name):
-    execute('ip', 'link', 'set', name, 'name', new_name,
-            run_as_root=True)
-
-
 def set_down_iface(ifname):
     execute('ip', 'link', 'set', ifname, 'down', run_as_root=True)
 
@@ -87,16 +82,9 @@ def set_up_iface(ifname):
 # -----------------------------------------------------------------------------
 # dpdk fast path utils
 
+def new_dpdk_virtual_port(driver, devargs, ifname):
+    execute('fp-cli', 'new-virtual-port', driver, 'devargs', devargs, 'ifname',
+            ifname, run_as_root=True)
 
-def enable_dpdk_port(portid, rx_cores, devargs=None):
-    if devargs:
-        execute('fp-cli', 'configure-port', portid, 'rx_cores',
-                rx_cores, 'devargs', devargs, run_as_root=True)
-    else:
-        execute('fp-cli', 'configure-port', portid, 'rx_cores',
-                rx_cores, run_as_root=True)
-    execute('fp-cli', 'enable-port', portid, run_as_root=True)
-
-
-def disable_dpdk_port(portid):
-    execute('fp-cli', 'disable-port', portid, run_as_root=True)
+def free_dpdk_port(ifname):
+    execute('fp-cli', 'free-port', ifname, run_as_root=True)
