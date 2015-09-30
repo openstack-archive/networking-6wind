@@ -85,18 +85,12 @@ def plug_ovs_hybrid(vif):
 
 
 def plug_ovs(vif):
-    # get a vhostuser port
+    # create a vhostuser port
     try:
-        vhostuser_port = vhostuser.get_vhostuser_port(vif['devname'],
-                                                      vif['vhostuser_socket'])
+        vhostuser.create_vhostuser_port(vif['devname'],
+                                        vif['vhostuser_socket'])
     except processutils.ProcessExecutionError as exception:
         utils.log_exception("Failed to get a new vhostuser port", exception)
-        sys.exit(1)
-
-    if vhostuser_port is None:
-        nb_devices = vhostuser.count_vhostuser_ports()
-        print("Not enough vhostuser ports availables (max devices=%d)",
-              nb_devices)
         sys.exit(1)
 
     if not is_hybrid_plug(vif):
@@ -136,9 +130,9 @@ def unplug_ovs(vif):
         unplug_ovs_hybrid(vif)
 
     try:
-        vhostuser.put_vhostuser_port(vif['devname'])
+        vhostuser.delete_vhostuser_port(vif['devname'])
     except processutils.ProcessExecutionError as exception:
-        utils.log_exception("Failed to free vhostuser port", exception)
+        utils.log_exception("Failed to delete vhostuser port", exception)
 
 
 # -----------------------------------------------------------------------------
