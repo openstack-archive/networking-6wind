@@ -113,11 +113,6 @@ function write_fast_path_conf {
     echo $EAL_OPTIONS
     sudo sed "s~#*: \${EAL_OPTIONS:=.*~: \${EAL_OPTIONS:=$EAL_OPTIONS}~" -i $FP_CONF
 
-    # command to preallocate vhostuser ports
-    FPNSDK_OPTIONS+=" --vdevs driver=pmd-vhost,nb_devices=$FP_NB_VHOSTUSER_PORTS"
-    FPNSDK_OPTIONS+=",sockname=/tmp/vhost-socket%num%,ifname=tap_unused_"
-    sudo sed "s~#*: \${FPNSDK_OPTIONS:=.*~: \${FPNSDK_OPTIONS:=$FPNSDK_OPTIONS}~" -i $FP_CONF
-
     if [[ "$FP_GREEN_MODE" == "True" ]]; then
         sudo sed "s~#*: \${MAINLOOP_DELAY_US:=.*~: \${MAINLOOP_DELAY_US:=500}~" -i $FP_CONF
     fi
