@@ -145,6 +145,10 @@ function write_fast_path_conf {
     fi
     sudo sed "s~#*: \${CORE_PORT_MAPPING:=.*~: \${CORE_PORT_MAPPING:=$CORE_PORT_MAPPING}~" -i $FP_CONF
 
+    if [[ "$FP_GREEN_MODE" == "True" ]]; then
+	    sudo sed "s~#*: \${MAINLOOP_DELAY_US:=.*~: \${MAINLOOP_DELAY_US:=500}~" -i $FP_CONF
+    fi
+
     # disable cpuset to avoid conflict with nova
     sudo sed "s~#*: \${CPUSET_ENABLE:=.*~: \${CPUSET_ENABLE:=0}~" -i /usr/local/etc/cpuset.env
 }
