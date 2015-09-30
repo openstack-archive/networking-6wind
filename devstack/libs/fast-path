@@ -10,6 +10,7 @@ function install_qemu_libvirt {
         sudo  http_proxy=${http_proxy:-} https_proxy=${https_proxy:-} \
             no_proxy=${no_proxy:-} \
             add-apt-repository -y ppa:6wind/virt-mq-ppa
+        sudo apt-get update
         install_package libvirt-bin python-libvirt qemu qemu-system-x86
     fi
 }
