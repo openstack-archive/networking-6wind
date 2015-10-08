@@ -30,6 +30,7 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: True,
                    portbindings.OVS_HYBRID_PLUG: True,
                    portbindings.VHOST_USER_OVS_PLUG: True,
+                   constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp',
                    constants.VIF_VHOSTUSER_SOCKET: get_vif_vhostuser_socket(
                        base.PORT_ID)}
 
@@ -44,6 +45,7 @@ class OVSFPMechanismSGDisabledBaseTestCase(
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: False,
                    portbindings.OVS_HYBRID_PLUG: False,
                    portbindings.VHOST_USER_OVS_PLUG: True,
+                   constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp',
                    constants.VIF_VHOSTUSER_SOCKET: get_vif_vhostuser_socket(
                        base.PORT_ID)}
 

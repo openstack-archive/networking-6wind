@@ -22,6 +22,8 @@ VIF_TYPE_VHOSTUSER = 'vhostuser'
 VIF_VHOSTUSER_MODE = 'vhostuser_mode'
 # vhostuser socket path
 VIF_VHOSTUSER_SOCKET = 'vhostuser_socket'
+# vhostuser ovs type
+VIF_VHOSTUSER_OVS_TYPE = 'vhostuser_ovs_type'
 
 # prefix for vhostuser socket name
 VIF_VHOSTUSER_SOCKET_PREFIX = 'vhost-socket-'

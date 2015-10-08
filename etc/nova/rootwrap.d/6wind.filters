@@ -1,3 +1,2 @@
 [Filters]
-vif-ovs-fp-plug: CommandFilter, /usr/local/bin/vif-ovs-fp-plug, root
 fp-cli: CommandFilter, /usr/local/bin/fp-cli, root

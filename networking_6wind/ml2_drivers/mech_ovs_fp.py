@@ -42,7 +42,7 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         vif_details = {portbindings.CAP_PORT_FILTER: sg_enabled,
                        portbindings.OVS_HYBRID_PLUG: sg_enabled,
                        portbindings.VHOST_USER_OVS_PLUG: True,
-                       }
+                       constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp'}
 
         SimpleAgentMechanismDriverBase.__init__(self,
                                                 n_constants.AGENT_TYPE_OVS,
