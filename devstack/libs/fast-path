@@ -86,7 +86,7 @@ function write_fast_path_conf {
     EAL_OPTIONS=" -d /usr/local/dpdk-addons/lib/librte_pmd_vhost.so "
     nb_ifaces=0
     if [[ -n $OVS_PHYSICAL_INTERFACE ]]; then
-        pci_addr+=$(get_pci_addr $OVS_PHYSICAL_INTERFACE)
+        pci_addr=$(get_pci_addr $OVS_PHYSICAL_INTERFACE)
         if [[ -n $pci_addr ]]; then
             EAL_OPTIONS+=" -w$pci_addr"
             nb_ifaces=$((nb_ifaces+1))
@@ -110,7 +110,6 @@ function write_fast_path_conf {
         # tell to dpdk to not unbind pci interfaces
         EAL_OPTIONS+=" --no-pci"
     fi
-    echo $EAL_OPTIONS
     sudo sed "s~#*: \${EAL_OPTIONS:=.*~: \${EAL_OPTIONS:=$EAL_OPTIONS}~" -i $FP_CONF
 
     if [[ "$FP_GREEN_MODE" == "True" ]]; then
