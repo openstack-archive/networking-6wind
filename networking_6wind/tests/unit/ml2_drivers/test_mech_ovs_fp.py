@@ -26,12 +26,12 @@ from neutron.tests.unit.plugins.ml2.drivers.openvswitch.mech_driver import (
 
 
 class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
-    VIF_TYPE = constants.VIF_TYPE_VHOSTUSER
+    VIF_TYPE = portbindings.VIF_TYPE_VHOST_USER
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: True,
                    portbindings.OVS_HYBRID_PLUG: True,
                    portbindings.VHOST_USER_OVS_PLUG: True,
                    constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp',
-                   constants.VIF_VHOSTUSER_SOCKET: get_vif_vhostuser_socket(
+                   portbindings.VHOST_USER_SOCKET: get_vif_vhostuser_socket(
                        base.PORT_ID)}
 
     def setUp(self):
@@ -46,7 +46,7 @@ class OVSFPMechanismSGDisabledBaseTestCase(
                    portbindings.OVS_HYBRID_PLUG: False,
                    portbindings.VHOST_USER_OVS_PLUG: True,
                    constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp',
-                   constants.VIF_VHOSTUSER_SOCKET: get_vif_vhostuser_socket(
+                   portbindings.VHOST_USER_SOCKET: get_vif_vhostuser_socket(
                        base.PORT_ID)}
 
     def setUp(self):
