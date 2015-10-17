@@ -1,4 +1,4 @@
 [gerrit]
 host=review.openstack.org
 port=29418
-project=stackforge/networking-6wind.git
+project=openstack/networking-6wind.git
