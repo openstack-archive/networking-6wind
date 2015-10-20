@@ -1,2 +1,2 @@
 [Filters]
-fp-cli: CommandFilter, /usr/local/bin/fp-cli, root
+fp-vdev: CommandFilter, /usr/local/bin/fp-vdev, root

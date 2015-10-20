@@ -55,10 +55,10 @@ def decorator(name, function):
         return function
 
 
-def create_fp_vif_port(dev, driver, devargs):
+def create_fp_vif_port(dev, sockpath, sockmode):
     if not linux_net.device_exists(dev):
-        utils.execute('fp-cli', 'new-virtual-port', driver, 'devargs',
-                      devargs, 'ifname', dev, run_as_root=True)
+        utils.execute('fp-vdev', 'add', dev, '--sockpath', sockpath,
+                      '--sockmode', sockmode, run_as_root=True)
     linux_net._set_device_mtu(dev)
     utils.execute('ip', 'link', 'set', dev, 'up', run_as_root=True,
                   check_exit_code=[0, 2, 254])
@@ -79,12 +79,11 @@ def plug_vhostuser_ovs_fp(self, instance, vif):
     if linux_net.device_exists(dev):
         return
 
-    sockmode_qemu, sockname = _get_vhostuser_settings(self, vif)
+    sockmode_qemu, sockpath = _get_vhostuser_settings(self, vif)
     sockmode_port = 'client' if sockmode_qemu == 'server' else 'server'
-    devargs = 'sockname=%s,sockmode=%s' % (sockname, sockmode_port)
 
     try:
-        create_fp_vif_port(dev, 'pmd-vhost', devargs)
+        create_fp_vif_port(dev, sockpath, sockmode_port)
         if vif.is_hybrid_plug_enabled():
             self.plug_ovs_hybrid(instance, vif)
             utils.execute('brctl', 'addif', self.get_br_name(vif['id']),
