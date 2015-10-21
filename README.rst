@@ -15,5 +15,5 @@ Linux bridge or openvswitch.
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/networking-6wind
-* Source: http://git.openstack.org/cgit/stackforge/networking-6wind
+* Source: http://git.openstack.org/cgit/openstack/networking-6wind
 * Bugs: http://bugs.launchpad.net/networking-6wind

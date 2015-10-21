@@ -2,7 +2,10 @@
 Enabling in Devstack
 ====================
 
-1. Download DevStack
+1. Download DevStack::
+
+      git clone https://git.openstack.org/openstack-dev/devstack
+      cd devstack
 
 2. Contact support@6wind.com to get Virtual Accelerator binary evaluation.
    And copy this ones into /opt/stack/fp-delivery
@@ -11,7 +14,7 @@ Enabling in Devstack
 
       > cat local.conf
       [[local|localrc]]
-      enable_plugin networking-6wind http://git.openstack.org/stackforge/networking-6wind
+      enable_plugin networking-6wind http://git.openstack.org/openstack/networking-6wind
       enable_service net-6wind
 
-4. run ``stack.sh``
+4. Run ``stack.sh``.
