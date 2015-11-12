@@ -97,6 +97,21 @@ def plug_vhostuser_ovs_fp(self, instance, vif):
         LOG.exception(_LE("Failed while plugging vif"), instance=instance)
 
 
+def plug_vhostuser_tap_fp(self, instance, vif):
+    """Plug ovs fp vhostuser port"""
+    dev = self.get_vif_devname(vif)
+    if linux_net.device_exists(dev):
+        return
+
+    sockmode_qemu, sockpath = _get_vhostuser_settings(self, vif)
+    sockmode_port = 'client' if sockmode_qemu == 'server' else 'server'
+
+    try:
+        create_fp_vif_port(dev, sockpath, sockmode_port)
+    except processutils.ProcessExecutionError:
+        LOG.exception(_LE("Failed while plugging vif"), instance=instance)
+
+
 def unplug_vhostuser_ovs_fp(self, instance, vif):
     """Unplug ovs fp vhostuser port"""
     dev = self.get_vif_devname(vif)
@@ -107,6 +122,12 @@ def unplug_vhostuser_ovs_fp(self, instance, vif):
         linux_net.delete_ovs_vif_port(self.get_bridge_name(vif), dev)
 
 
+def unplug_vhostuser_tap_fp(self, instance, vif):
+    """Plug ovs fp vhostuser port"""
+    dev = self.get_vif_devname(vif)
+    linux_net.delete_net_dev(dev)
+
+
 # The following functions are used as monkey patches on the code defined in
 # nova/virt/libvirt/vif.py
 
@@ -115,9 +136,13 @@ def plug_vhostuser(self, instance, vif):
                                   False)
     ovs_type = vif['details'].get(constants.VIF_VHOSTUSER_OVS_TYPE,
                                   "ovs-dpdk")
+    tap_fp_plug = vif['details'].get(constants.VIF_VHOSTUSER_TAP_FP_PLUG,
+                                     False)
 
     if ovs_plug is True and ovs_type == 'ovs-fp':
         plug_vhostuser_ovs_fp(self, instance, vif)
+    elif tap_fp_plug is True:
+        plug_vhostuser_tap_fp(self, instance, vif)
     else:
         _plug_vhostuser(self, instance, vif)
 
@@ -127,8 +152,12 @@ def unplug_vhostuser(self, instance, vif):
                                   False)
     ovs_type = vif['details'].get(constants.VIF_VHOSTUSER_OVS_TYPE,
                                   "ovs-dpdk")
+    tap_fp_plug = vif['details'].get(constants.VIF_VHOSTUSER_TAP_FP_PLUG,
+                                     False)
 
     if ovs_plug is True and ovs_type == 'ovs-fp':
         unplug_vhostuser_ovs_fp(self, instance, vif)
+    elif tap_fp_plug is True:
+        unplug_vhostuser_tap_fp(self, instance, vif)
     else:
         _unplug_vhostuser(self, instance, vif)

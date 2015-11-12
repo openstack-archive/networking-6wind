@@ -13,7 +13,7 @@ FP_GREEN_MODE=${FP_GREEN_MODE:-False}
 OVS_PHYSICAL_INTERFACE=${OVS_PHYSICAL_INTERFACE:-''}
 
 # set ovs-fp mechanism driver
-Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovs-fp
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovs-fp,lb-fp
 
 # disable security group and ovs hybrid for better networking performance
 Q_DISABLE_SECURITY=${Q_DISABLE_SECURITY:-False}

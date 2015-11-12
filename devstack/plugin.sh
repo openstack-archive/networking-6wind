@@ -50,6 +50,10 @@ function configure_ml2_for_fast_path {
         iniset /$Q_PLUGIN_CONF_FILE securitygroup enable_ipset False
         iniset $NEUTRON_CONF agent comment_iptables_rules False
     fi
+
+    if [[ "$Q_AGENT" == "linuxbridge" ]]; then
+        AGENT_BINARY=neutron-lb-fp-agent
+    fi
 }
 
 function nova_set_hugepages_flavor {

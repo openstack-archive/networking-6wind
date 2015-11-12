@@ -24,7 +24,12 @@ VIF_VHOSTUSER_MODE = 'vhostuser_mode'
 VIF_VHOSTUSER_SOCKET = 'vhostuser_socket'
 # vhostuser ovs type
 VIF_VHOSTUSER_OVS_TYPE = 'vhostuser_ovs_type'
+# vhostuser tap fp plug
+VIF_VHOSTUSER_TAP_FP_PLUG = 'vhostuser_tap_fp_plug'
 
 # prefix for vhostuser socket name
 VIF_VHOSTUSER_SOCKET_PREFIX = 'vhost-socket-'
 VIF_VHOSTUSER_SOCKET_DIR = '/tmp'
+
+# AGENT_TYPE
+AGENT_TYPE_LINUXBRIDGE_FP = 'Linux bridge fast path agent'
