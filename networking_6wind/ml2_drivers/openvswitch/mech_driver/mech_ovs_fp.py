@@ -17,7 +17,6 @@ from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
 
 from neutron.agent import securitygroups_rpc
-from neutron.common import constants as n_constants
 from neutron.extensions import portbindings
 from neutron.plugins.ml2 import driver_api
 from neutron.plugins.ml2.drivers.mech_agent import (
@@ -38,27 +37,49 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
     """
 
     def __init__(self):
+        agent_type = constants.AGENT_TYPE_OVS_FP
+        vif_type = portbindings.VIF_TYPE_OVS
         sg_enabled = securitygroups_rpc.is_firewall_enabled()
         vif_details = {portbindings.CAP_PORT_FILTER: sg_enabled,
                        portbindings.OVS_HYBRID_PLUG: sg_enabled,
-                       portbindings.VHOST_USER_OVS_PLUG: True,
-                       constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp'}
+                       portbindings.VHOST_USER_OVS_PLUG: True}
 
         SimpleAgentMechanismDriverBase.__init__(self,
-                                                n_constants.AGENT_TYPE_OVS,
-                                                constants.VIF_TYPE_VHOSTUSER,
+                                                agent_type,
+                                                vif_type,
                                                 vif_details)
 
     def try_to_bind_segment_for_agent(self, context, segment, agent):
         if self.check_segment_for_agent(segment, agent):
-            context.set_binding(segment[driver_api.ID], self.vif_type,
-                                self._get_vif_details(context))
+            context.set_binding(segment[driver_api.ID],
+                                get_vif_type(agent),
+                                get_vif_details(agent, context))
             return True
         else:
             return False
 
-    def _get_vif_details(self, context):
-        vif_details = self.vif_details.copy()
-        vif_vhostuser_socket = get_vif_vhostuser_socket(context.current['id'])
-        vif_details[constants.VIF_VHOSTUSER_SOCKET] = vif_vhostuser_socket
-        return vif_details
+    def get_vif_type(self, agent):
+        agent_type = self.agent['configurations']['agent_type']
+
+        if agent_type == constants.AGENT_TYPE_OVS_FP:
+            fp_offload = agent['configurations']['fp_offload']
+            if fp_offload:
+                return portbindings.VIF_TYPE_VHOST_USER
+
+        return self.vif_type
+
+    def get_vif_details(self, agent, context):
+        agent_type = agent['configurations']['agent_type']
+
+        if agent_type == constants.AGENT_TYPE_OVS_FP:
+            fp_offload = agent['configurations']['fp_offload']
+            if fp_offload:
+                vif_details_copy = self.vif_details.copy()
+                vif_vhostuser_socket = get_vif_vhostuser_socket(context.current['id'])
+                vif_details_copy[portbindings.VHOST_USER_SOCKET] = vif_vhostuser_socket
+                vif_details_copy[portbindings.VHOST_USER_MODE] = portbindings.VHOST_USER_MODE_CLIENT
+                vif_details_copy[constants.VIF_VHOSTUSER_FP_PLUG] = True
+                return vif_details_copy
+
+        return self.vif_details
+
