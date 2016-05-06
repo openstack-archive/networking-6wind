@@ -1,4 +1,4 @@
-#    Copyright 2015 6WIND S.A.
+#    Copyright 2016 6WIND S.A.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -25,26 +25,25 @@ from neutron.common import config as common_config
 from neutron.common import utils as n_utils
 from neutron.i18n import _LE
 from neutron.i18n import _LI
+
+from neutron.plugins.ml2.drivers.agent import _common_agent as ca
 from neutron.plugins.ml2.drivers.linuxbridge.agent import (
     linuxbridge_neutron_agent as lb_agent)
 
 
 LOG = logging.getLogger(__name__)
+LB_FP_AGENT_BINARY = 'neutron-linuxbridge-fp-agent'
 
 
-class LBFPNeutronAgentRPC(lb_agent.LinuxBridgeNeutronAgentRPC):
-    def __init__(self, bridge_mappings, interface_mappings, fp_offload,
-                 polling_interval, quitting_rpc_timeout):
-            super(LBFPNeutronAgentRPC, self).__init__(bridge_mappings,
-                                                      interface_mappings,
-                                                      polling_interval,
-                                                      quitting_rpc_timeout)
-            self.fp_offload = fp_offload
+class LinuxBridgeFPManager(lb_agent.LinuxBridgeManager):
+
+    def __init__(self, bridge_mappings, interface_mappings):
+        super(LinuxBridgeFPManager, self).__init__(bridge_mappings, interface_mappings)
+        self.agent_type = constants.AGENT_TYPE_LINUXBRIDGE_FP
 
     def _report_state(self):
-        self.agent_state['agent_type'] = constants.AGENT_TYPE_LINUXBRIDGE_FP
-        self.agent_state['configurations']['fp_offload'] = self.fp_offload
-        super(LBFPNeutronAgentRPC, self)._report_state()
+        self.agent_state['configurations']['fp_offload'] = utils.check_fp_offload()
+        super(LinuxBridgeFPManager, self)._report_state()
 
 
 # Copy from official linux bridge agent
@@ -70,17 +69,14 @@ def main():
         sys.exit(1)
     LOG.info(_LI("Bridge mappings: %s"), bridge_mappings)
 
+    manager = LinuxBridgeFPManager(bridge_mappings, interface_mappings)
+
     polling_interval = cfg.CONF.AGENT.polling_interval
     quitting_rpc_timeout = cfg.CONF.AGENT.quitting_rpc_timeout
-    agent = LBFPNeutronAgentRPC(bridge_mappings,
-                                interface_mappings,
-                                utils.check_fp_offload(),
-                                polling_interval,
-                                quitting_rpc_timeout)
+    agent = ca.CommonAgentLoop(manager, polling_interval, quitting_rpc_timeout,
+                               constants.AGENT_TYPE_LINUXBRIDGE_FP,
+                               LB_FP_AGENT_BINARY)
     LOG.info(_LI("Agent initialized successfully, now running... "))
     launcher = service.launch(cfg.CONF, agent)
     launcher.wait()
 
-
-if __name__ == "__main__":
-    main()

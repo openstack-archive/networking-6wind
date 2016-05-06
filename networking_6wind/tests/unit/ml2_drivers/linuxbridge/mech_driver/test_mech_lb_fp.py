@@ -22,10 +22,10 @@ from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
 
 
 class LBFPMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
-    VIF_TYPE = constants.VIF_TYPE_VHOSTUSER
+    VIF_TYPE = portbindings.VIF_TYPE_VHOST_USER
     AGENT_TYPE = constants.AGENT_TYPE_LINUXBRIDGE_FP
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: True,
-                   constants.VIF_VHOSTUSER_TAP_FP_PLUG: True,
+                   constants.VIF_VHOSTUSER_FP_PLUG: True,
                    portbindings.VHOST_USER_SOCKET: get_vif_vhostuser_socket(
                        base.PORT_ID)}
 

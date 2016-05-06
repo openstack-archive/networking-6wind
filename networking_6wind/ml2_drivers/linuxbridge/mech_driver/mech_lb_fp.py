@@ -38,7 +38,7 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
 
     def __init__(self):
         agent_type = constants.AGENT_TYPE_LINUXBRIDGE_FP
-        vif_type = portbindings.VIF_TYPE_OVS
+        vif_type = portbindings.VIF_TYPE_BRIDGE
         sg_enabled = securitygroups_rpc.is_firewall_enabled()
         vif_details = {portbindings.CAP_PORT_FILTER: sg_enabled}
 
@@ -48,27 +48,33 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
     def try_to_bind_segment_for_agent(self, context, segment, agent):
         if self.check_segment_for_agent(segment, agent):
             context.set_binding(segment[driver_api.ID],
-                                self.get_vif_type(agent),
-                                self.get_vif_details(agent, context))
+                                get_vif_type(agent),
+                                get_vif_details(agent, context))
             return True
         else:
             return False
 
     def get_vif_type(self, agent):
-        fp_offload = agent['configurations']['fp_offload']
-        if fp_offload is True:
-            return portbindings.VIF_TYPE_VHOST_USER
-        else:
-            return self.vif_type
+        agent_type = agent.agent_type
+
+        if agent_type == constants.AGENT_TYPE_LINUXBRIDGE_FP:
+            fp_offload = agent['configurations']['fp_offload']
+            if fp_offload:
+                return portbindings.VIF_TYPE_VHOST_USER
+
+        return self.vif_type
 
     def get_vif_details(self, agent, context):
-        fp_offload = agent['configurations']['fp_offload']
-        if fp_offload is False:
-            return self.vif_details
+        agent_type = agent.agent_type
 
-        vif_details = self.vif_details.copy()
-        vif_vhostuser_socket = get_vif_vhostuser_socket(context.current['id'])
-        vif_details[portbindings.VHOST_USER_SOCKET] = vif_vhostuser_socket
-        vif_details[constants.VIF_VHOSTUSER_TAP_FP_PLUG] = True
+        if agent_type == constants.AGENT_TYPE_LINUXBRIDGE_FP:
+            fp_offload = agent['configurations']['fp_offload']
+            if fp_offload:
+                vif_details_copy = self.vif_details.copy()
+                vif_vhostuser_socket = get_vif_vhostuser_socket(context.current['id'])
+                vif_details_copy[portbindings.VHOST_USER_SOCKET] = vif_vhostuser_socket
+                vif_details_copy[portbindings.VHOST_USER_MODE] = portbindings.VHOST_USER_MODE_CLIENT
+                vif_details_copy[constants.VIF_VHOSTUSER_FP_PLUG] = True
+                return vif_details_copy
 
-        return vif_details
+        return self.vif_details
