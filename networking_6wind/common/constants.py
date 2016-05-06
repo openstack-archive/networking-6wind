@@ -24,3 +24,4 @@ VIF_VHOSTUSER_SOCKET_DIR = '/tmp'
 
 # AGENT_TYPE
 AGENT_TYPE_LINUXBRIDGE_FP = 'Linux bridge fast path agent'
+AGENT_TYPE_OVS_FP = 'Openvswitch fast path agent'
