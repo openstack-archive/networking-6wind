@@ -2,154 +2,151 @@
 #
 # Copyright 2015 6WIND S.A.
 
-function install_qemu_libvirt {
-    # ubuntu 14.04 has too old qemu/libvirt version to support vhostuser
-    # redhat 7.1 : ok
-    if is_ubuntu; then
-        install_package software-properties-common
-        sudo  http_proxy=${http_proxy:-} https_proxy=${https_proxy:-} \
-            no_proxy=${no_proxy:-} \
-            add-apt-repository -y ppa:6wind/virt-mq-ppa
-        sudo apt-get update
-        install_package libvirt-bin python-libvirt qemu qemu-system-x86
-    fi
+
+function install_va_deb_pkg {
+    sudo apt-get install -y --force-yes virtual-accelerator
 }
 
-function install_fast_path_deb {
-    cd $FP_PKG_DIR/..
-    DEB_DIR=`basename $FP_PKG_DIR`
-    dpkg-scanpackages $DEB_DIR | gzip > $DEB_DIR/Packages.gz
+function setup_va_local_repo {
+    cd $VA_PKG_DIR/..
+    DEB_DIR=`basename $VA_PKG_DIR`
     sudo mkdir -p /etc/apt/sources.list.d
-    echo "deb file://$PWD $DEB_DIR/" |  sudo tee /etc/apt/sources.list.d/6wind.list
+    echo "deb file:$PWD/$DEB_DIR/ ./" |  sudo tee /etc/apt/sources.list.d/6wind.list
     # allow unauthenticated packages
     # TODO: create an authenticated local repo
     echo 'APT::Get::AllowUnauthenticated 1;' | sudo tee  /etc/apt/apt.conf.d/02unauthenticated
-    sudo apt-get remove -y openvswitch-switch openvswitch-common
     sudo apt-get update
-    sudo apt-get install -y  \
-        $(ls $DEB_DIR/*.deb | sed -r "s,.*/([^/_]+)_.*$,\1,")
 }
 
-function uninstall_fast_path_deb {
-    cd $FP_PKG_DIR/..
-    DEB_DIR=`basename $FP_PKG_DIR`
-    sudo apt-get remove -y  \
-        $(ls $DEB_DIR/*.deb | sed -r "s,.*/([^/_]+)_.*$,\1,")
+function setup_va_remote_repo {
+    cd $VA_REPO_DIR
+    sudo dpkg -i $VA_CREDENTIALS_PACKAGE
+    sudo curl --cacert /usr/local/etc/certs/6wind_ca.crt --key /usr/local/etc/certs/6wind_client.key --cert /usr/local/etc/certs/6wind_client.crt -o 6wind-virtual-accelerator-repository.deb https://repo.6wind.com/virtual-accelerator/ubuntu-14.04/$(dpkg --print-architecture)/$VA_VERSION/6wind-virtual-accelerator-ubuntu-14.04-repository_$VA_VERSION-1_$(dpkg --print-architecture).deb
+    sudo dpkg -i 6wind-virtual-accelerator-repository.deb
+    sudo apt-get update
+}
+
+function uninstall_va_deb_pkg {
+    uninstall_package virtual-accelerator
+}
+
+function remove_va_local_repo {
     sudo rm /etc/apt/sources.list.d/6wind.list
     sudo apt-get update
 }
 
-function install_fast_path_rpm {
+function remove_va_remote_repo {
+    cd $VA_REPO_DIR
+    sudo dpkg -r 6wind-virtual-accelerator-repository.deb
+    sudo apt-get update
+}
+
+function install_va_rpm_pkg {
     echo "TODO"
     exit 1
 }
 
-function uninstall_fast_path_rpm {
+function uninstall_va_rpm_pkg {
     echo "TODO"
     exit 1
 }
 
-function install_fast_path {
-    install_qemu_libvirt
+function install_va {
     if is_ubuntu; then
-        install_fast_path_deb
+        install_va_deb_pkg
     elif is_fedora; then
-        install_fast_path_rpm
+        install_va_rpm_pkg
     else
         exit_distro_not_supported "fast path not supported on this distrib"
     fi
 }
 
-function uninstall_fast_path {
+function setup_va_repo {
+     if is_ubuntu; then
+        if [[ $VA_PKG_DIR ]]; then
+            setup_va_local_repo
+            return
+        fi
+
+        if [[ $VA_REPO_DIR ]]; then
+            setup_va_remote_repo
+            return
+        fi
+    fi 
+}
+
+function uninstall_va {
     if is_ubuntu; then
-        uninstall_fast_path_deb
+        uninstall_va_deb_pkg
     elif is_fedora; then
-        uninstall_fast_path_rpm
+        uninstall_va_rpm_pkg
     fi
 }
 
-function get_pci_addr {
-    local pci_addr=$(ethtool -i $1 | grep bus-info  | awk '{print $2}')
-    echo $pci_addr
+function remove_va_repo {
+     if is_ubuntu; then
+        if [[ $VA_PKG_DIR ]]; then
+            remove_va_local_repo
+            return
+        fi
+
+        if [[ $VA_REPO_DIR ]]; then
+            remove_va_remote_repo
+            return
+        fi
+    fi 
 }
 
-function write_fast_path_conf {
+function set_va_opt {
+    if grep -q '^#\?: \${'"$1"':=.*}' "$3"; then
+        sudo sed -i -- 's@^#\?: \${'"$1"':=.*@: ${'"$1"':='"$2"'}@' "$3";
+    else
+        sudo echo >> $3;
+        sudo echo '# Config added by netwokring_6wind plugin' >> $3;
+        sudo echo ': ${'"$1"':='"$2"'}' >> $3;
+    fi
+}
+
+function write_va_conf {
     FP_CONF="/usr/local/etc/fast-path.env"
     sudo cp /usr/local/etc/fast-path.env.tmpl $FP_CONF
 
-    sudo sed "s~#*: \${FP_MASK:=.*~: \${FP_MASK:=$FP_MASK}~" -i $FP_CONF
-    sudo sed "s~#*: \${NB_MEM_CHANNELS:=.*~: \${NB_MEM_CHANNELS:=$FP_NB_MEM_CHANNELS}~" -i $FP_CONF
-    sudo sed "s~#*: \${NB_HUGEPAGES:=.*~: \${NB_HUGEPAGES:=$FP_NB_HUGEPAGES}~" -i $FP_CONF
-    sudo sed "s~#*: \${FP_MEMORY:=.*~: \${FP_MEMORY:=$FP_MEMORY}~" -i $FP_CONF
-    sudo sed "s~#*: \${NB_MBUF:=.*~: \${NB_MBUF:=$FP_NB_MBUF}~" -i $FP_CONF
+    set_va_opt "HUGEPAGES_DIR" "/dev/hugepages" $FP_CONF
 
-    EAL_OPTIONS=" -d /usr/local/dpdk-addons/lib/librte_pmd_vhost.so "
-    nb_ifaces=0
-    if [[ -n $OVS_PHYSICAL_INTERFACE ]]; then
-        pci_addr=$(get_pci_addr $OVS_PHYSICAL_INTERFACE)
-        if [[ -n $pci_addr ]]; then
-            EAL_OPTIONS+=" -w$pci_addr"
-            nb_ifaces=$((nb_ifaces+1))
-        fi
+    if [[ -n $VM_MEMORY ]]; then
+        set_va_opt "VM_MEMORY" "$VM_MEMORY" $FP_CONF
     fi
-    if [[ -n $LB_PHYSICAL_INTERFACE ]]; then
-        pci_addr=$(get_pci_addr $LB_PHYSICAL_INTERFACE)
-        if [[ -n $pci_addr ]]; then
-            EAL_OPTIONS+=" -w$pci_addr"
-            nb_ifaces=$((nb_ifaces+1))
-        fi
+
+    if [[ -n $FP_MEMORY ]]; then
+        set_va_opt "FP_MEMORY" "$FP_MEMORY" $FP_CONF
     fi
-    if [[ -n $PUBLIC_INTERFACE ]]; then
-        pci_addr=$(get_pci_addr $PUBLIC_INTERFACE)
-        if [[ -n $pci_addr ]]; then
-            EAL_OPTIONS+=" -w$pci_addr"
-            nb_ifaces=$((nb_ifaces+1))
-        fi
-    fi
-    if [[ $nb_ifaces == 0 ]]; then
-        # tell to dpdk to not unbind pci interfaces
-        EAL_OPTIONS+=" --no-pci"
-    fi
-    sudo sed "s~#*: \${EAL_OPTIONS:=.*~: \${EAL_OPTIONS:=$EAL_OPTIONS}~" -i $FP_CONF
 
     if [[ "$FP_GREEN_MODE" == "True" ]]; then
-        sudo sed "s~#*: \${MAINLOOP_DELAY_US:=.*~: \${MAINLOOP_DELAY_US:=500}~" -i $FP_CONF
+        set_va_opt "MAINLOOP_DELAY_US" "500" $FP_CONF
     fi
-
-    # disable cpuset to avoid conflict with nova
-    sudo sed "s~#*: \${CPUSET_ENABLE:=.*~: \${CPUSET_ENABLE:=0}~" -i /usr/local/etc/cpuset.env
 }
 
-function start_fast_path {
-    sudo fast-path.sh start
-    result=$(sudo fast-path.sh status)
-    if [[ $result == *"fail"* ]]; then
-        echo "Fail to start fast-path.sh, exit"
-        sudo fast-path.sh stop
-        exit 1
-    fi
-    sudo linux-fp-sync.sh start
-    result=$(sudo linux-fp-sync.sh status)
-    if [[ $result == *"fail"* ]]; then
-        echo "Fail to start linux-fp-sync.sh, exit"
-        sudo linux-fp-sync.sh stop
-        sudo fast-path.sh stop
-        exit 1
-    fi
-    sudo vrfd -s /usr/local/bin/linux-fp-sync-vrf.sh
+function configure_system_for_va {
     if is_ubuntu; then
+        sudo mkdir -pv /sys/fs/cgroup/cpu
+        sudo mount -t cgroup cpu /sys/fs/cgroup/cpu || true
+    fi
+}
+
+function start_va {
+    if is_ubuntu; then
+        sudo service virtual-accelerator start
         sudo service openvswitch-switch restart
         sudo service libvirt-bin restart
     else
+        sudo systemctl start virtual-accelerator
         sudo systemctl restart openvswitch-switch
-        sudo systemctl libvirtd restart
+        sudo systemctl restart libvirtd
     fi
 }
 
-function stop_fast_path {
-    sudo linux-fp-sync.sh stop
-    sudo fast-path.sh stop
-    sudo pkill -SIGQUIT vrfd
+function stop_va {
+    sudo service virtual-accelerator stop
 }
 
 function start_rpc_fp_server {
