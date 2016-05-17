@@ -1,22 +1,22 @@
 # Copyright 2015 6WIND S.A.
 
 # fast path settings
-FP_PKG_DIR=${FP_PKG_DIR:-$DEST/fp-delivery}
-FP_MASK=${FP_MASK:-0x4}
-FP_MEMORY=${FP_MEMORY:-512}
-FP_NB_MEM_CHANNELS=${FP_NB_MEM_CHANNELS:-4}
-FP_NB_HUGEPAGES=${FP_NB_HUGEPAGES:-1024}
-FP_NB_MBUF=${FP_NB_MBUF:-16384}
-FP_GREEN_MODE=${FP_GREEN_MODE:-False}
 
-# openvswitch settings
-OVS_PHYSICAL_INTERFACE=${OVS_PHYSICAL_INTERFACE:-''}
+# local repo containing deb packages (including Release, Packages.gz)
+VA_PKG_DIR=${VA_PKG_DIR:-$DEST/fp-delivery/software}
+FP_MEMORY=${FP_MEMORY:-512}
+FP_GREEN_MODE=${FP_GREEN_MODE:-False}
+VM_MEMORY=${VM_MEMORY:-2048}
+
+VA_REPO_DIR=${VA_REPO_DIR:-$DEST/va-repo}
+VA_REPO_PACKAGE=${VA_REPO_PACKAGE:-6wind-credentials-package.deb}
+VA_VERSION=${VA_VERSION:-1.4}
 
 # set ovs-fp mechanism driver
 Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovs-fp,lb-fp
 
 # disable security group and ovs hybrid for better networking performance
-Q_DISABLE_SECURITY=${Q_DISABLE_SECURITY:-False}
+Q_USE_SECGROUP=${Q_USE_SECGROUP:-False}
 
 # name of pidfile
 PIDFILE=${PIDFILE:-/tmp/rpc_fp_server.pid}
