@@ -23,10 +23,10 @@ from networking_6wind.common import utils
 
 from neutron.common import config as common_config
 from neutron.common import utils as n_utils
-from neutron.i18n import _LE
-from neutron.i18n import _LI
 from neutron.plugins.ml2.drivers.linuxbridge.agent import (
     linuxbridge_neutron_agent as lb_agent)
+
+from networking_6wind._i18n import _LE, _LI
 
 
 LOG = logging.getLogger(__name__)
