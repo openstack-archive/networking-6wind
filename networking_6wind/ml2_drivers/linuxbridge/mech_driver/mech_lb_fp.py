@@ -136,6 +136,7 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
                 details_copy[portbindings.VHOST_USER_SOCKET] = socket
                 details_copy[portbindings.VHOST_USER_MODE] = qemu_mode
                 details_copy[constants.VIF_VHOSTUSER_FP_PLUG] = True
+                details_copy[constants.VIF_VHOSTUSER_FP_PLUG_TYPE] = VIF_BRIDGE
 
                 # Workaroud to notify nova of bridge name to be used during
                 # plug. This should not be necessary because Nova can detect

@@ -37,6 +37,7 @@ class LBFPMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
 
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: True,
                    constants.VIF_VHOSTUSER_FP_PLUG: True,
+                   constants.VIF_VHOSTUSER_FP_PLUG_TYPE: VIF_BRIDGE,
                    portbindings.VHOST_USER_MODE: mode,
                    portbindings.VHOST_USER_SOCKET: socket,
                    portbindings.VIF_DETAILS_BRIDGE_NAME: br_name}

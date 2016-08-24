@@ -138,7 +138,7 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
                 details_copy[portbindings.VHOST_USER_SOCKET] = socket
                 details_copy[portbindings.VHOST_USER_MODE] = qemu_mode
                 details_copy[constants.VIF_VHOSTUSER_FP_PLUG] = True
-                details_copy[portbindings.VHOST_USER_OVS_PLUG] = True
+                details_copy[constants.VIF_VHOSTUSER_FP_PLUG_TYPE] = VIF_OVS
                 return details_copy
 
         return self.vif_details

@@ -16,10 +16,10 @@
 Extented support of vif drivers
 """
 
+from networking_6wind._i18n import _LE
 from networking_6wind.common import constants
 
-from nova import exception
-from nova.i18n import _LE
+import nova.conf
 from nova.network import linux_net
 from nova.network import model
 from nova import utils
@@ -27,137 +27,111 @@ from nova import utils
 from oslo_concurrency import processutils
 from oslo_log import log as logging
 
+CONF = nova.conf.CONF
 
 LOG = logging.getLogger(__name__)
 
-_plug_vhostuser = None
-_unplug_vhostuser = None
+_plug_vhostuser_fp = None
+_unplug_vhostuser_fp = None
 
 
 def decorator(name, function):
-    """This function must be used with the monkey_patch_modules option in nova.conf
+    """Decorator for (un)plug_vhostuser_fp
+
+    This function must be used with the monkey_patch_modules option in
+    nova.conf
 
     Example:
     monkey_patch=true
     monkey_patch_modules=nova.virt.libvirt.vif:\
                  openstack_dpdk_vnic.kilo.nova.virt.libvirt.vif.decorator
     """
-    global _plug_vhostuser, _unplug_vhostuser
 
-    if name == 'nova.virt.libvirt.vif.LibvirtGenericVIFDriver.plug_vhostuser':
-        _plug_vhostuser = function
-        return plug_vhostuser
+    global _plug_vhostuser_fp, _unplug_vhostuser_fp
+
+    if name == (
+        'nova.virt.libvirt.vif.LibvirtGenericVIFDriver.plug_vhostuser_fp'):
+        _plug_vhostuser_fp = function
+        return plug_vhostuser_fp
     elif name == (
-        'nova.virt.libvirt.vif.LibvirtGenericVIFDriver.unplug_vhostuser'):
-        _unplug_vhostuser = function
-        return unplug_vhostuser
+        'nova.virt.libvirt.vif.LibvirtGenericVIFDriver.unplug_vhostuser_fp'):
+        _unplug_vhostuser_fp = function
+        return unplug_vhostuser_fp
     else:
         return function
 
 
-def create_fp_vif_port(dev, sockpath, sockmode):
-    if not linux_net.device_exists(dev):
-        utils.execute('fp-vdev', 'add', dev, '--sockpath', sockpath,
-                      '--sockmode', sockmode, run_as_root=True)
-    linux_net._set_device_mtu(dev)
-    utils.execute('ip', 'link', 'set', dev, 'up', run_as_root=True,
-                  check_exit_code=[0, 2, 254])
+def plug_vhostuser_fp(self, instance, vif):
+    """Create and plug fp netdevice
 
+    This method replaces the one in upstream nova to support BRIDGE and TAP
+    plug
+    """
 
-def _get_vhostuser_settings(self, vif):
-    vif_details = vif['details']
-    mode = vif_details.get(model.VIF_DETAILS_VHOSTUSER_MODE, 'server')
-    sock_path = vif_details.get(model.VIF_DETAILS_VHOSTUSER_SOCKET)
-    if sock_path is None:
-        raise exception.VifDetailsMissingVhostuserSockPath(vif_id=vif['id'])
-    return mode, sock_path
-
-
-def plug_vhostuser_ovs_fp(self, instance, vif):
-    """Plug ovs fp vhostuser port"""
     dev = self.get_vif_devname(vif)
     if linux_net.device_exists(dev):
         return
 
-    sockmode_qemu, sockpath = _get_vhostuser_settings(self, vif)
+    fp_plug_type = vif['details'].get(constants.VIF_VHOSTUSER_FP_PLUG_TYPE,
+                                      None)
+    sockmode_qemu, sockpath = self._get_vhostuser_settings(vif)
     sockmode_port = 'client' if sockmode_qemu == 'server' else 'server'
 
     try:
-        create_fp_vif_port(dev, sockpath, sockmode_port)
-        if vif.is_hybrid_plug_enabled():
-            self.plug_ovs_hybrid(instance, vif)
-            utils.execute('brctl', 'addif', self.get_br_name(vif['id']),
-                          dev, run_as_root=True)
-        else:
-            iface_id = self.get_ovs_interfaceid(vif)
-            linux_net.create_ovs_vif_port(self.get_bridge_name(vif),
-                                          dev, iface_id, vif['address'],
-                                          instance.uuid)
+        linux_net.create_fp_dev(dev, sockpath, sockmode_port)
+
+        if fp_plug_type == 'ovs':
+            bridge_name = vif['details'].get(model.VIF_DETAILS_BRIDGE_NAME,
+                                             CONF.neutron.ovs_bridge)
+            vif['network']['bridge'] = bridge_name
+
+            if vif.is_hybrid_plug_enabled():
+                self.plug_ovs_hybrid(instance, vif)
+                utils.execute('brctl', 'addif',
+                              self.get_br_name(vif['id']),
+                              dev, run_as_root=True)
+            else:
+                iface_id = self.get_ovs_interfaceid(vif)
+                mtu = vif['network'].get_meta('mtu')
+                linux_net.create_ovs_vif_port(self.get_bridge_name(vif),
+                                              dev, iface_id,
+                                              vif['address'],
+                                              instance.uuid, mtu)
+        elif fp_plug_type == 'bridge':
+            bridge_name = vif['details'].get(model.VIF_DETAILS_BRIDGE_NAME, "")
+            utils.plug_bridge_vif_port(bridge_name, dev)
+        elif fp_plug_type == 'tap':
+            mac = vif['details'].get(model.VIF_DETAILS_TAP_MAC_ADDRESS)
+            utils.execute('ip', 'link', 'set', dev, 'address', mac,
+                          run_as_root=True, check_exit_code=[0, 2, 254])
     except processutils.ProcessExecutionError:
-        LOG.exception(_LE("Failed while plugging vif"), instance=instance)
+        LOG.exception(_LE('Failed while plugging vif'), instance=instance)
 
 
-def plug_vhostuser_tap_fp(self, instance, vif):
-    """Plug ovs fp vhostuser port"""
+def unplug_vhostuser_fp(self, instance, vif):
+    """Unplug and delete fp netdevice
+
+    This method replaces the one in upstream nova to support BRIDGE unplug
+    """
+
     dev = self.get_vif_devname(vif)
-    if linux_net.device_exists(dev):
-        return
-
-    sockmode_qemu, sockpath = _get_vhostuser_settings(self, vif)
-    sockmode_port = 'client' if sockmode_qemu == 'server' else 'server'
+    fp_plug_type = vif['details'].get(constants.VIF_VHOSTUSER_FP_PLUG_TYPE,
+                                      None)
 
     try:
-        create_fp_vif_port(dev, sockpath, sockmode_port)
+        if fp_plug_type == 'ovs':
+            bridge_name = vif['details'].get(model.VIF_DETAILS_BRIDGE_NAME,
+                                             CONF.neutron.ovs_bridge)
+            vif['network']['bridge'] = bridge_name
+
+            if vif.is_hybrid_plug_enabled():
+                self.unplug_ovs_hybrid(instance, vif)
+            else:
+                linux_net.delete_ovs_vif_port(self.get_bridge_name(vif),
+                                              dev, False)
+        elif fp_plug_type == 'bridge':
+            bridge_name = vif['details'].get(model.VIF_DETAILS_BRIDGE_NAME, "")
+            utils.unplug_bridge_vif_port(bridge_name, dev)
+        linux_net.delete_fp_dev(dev)
     except processutils.ProcessExecutionError:
-        LOG.exception(_LE("Failed while plugging vif"), instance=instance)
-
-
-def unplug_vhostuser_ovs_fp(self, instance, vif):
-    """Unplug ovs fp vhostuser port"""
-    dev = self.get_vif_devname(vif)
-    if vif.is_hybrid_plug_enabled():
-        self.unplug_ovs_hybrid(instance, vif)
-        linux_net.delete_net_dev(dev)
-    else:
-        linux_net.delete_ovs_vif_port(self.get_bridge_name(vif), dev)
-
-
-def unplug_vhostuser_tap_fp(self, instance, vif):
-    """Plug ovs fp vhostuser port"""
-    dev = self.get_vif_devname(vif)
-    linux_net.delete_net_dev(dev)
-
-
-# The following functions are used as monkey patches on the code defined in
-# nova/virt/libvirt/vif.py
-
-def plug_vhostuser(self, instance, vif):
-    ovs_plug = vif['details'].get(model.VIF_DETAILS_VHOSTUSER_OVS_PLUG,
-                                  False)
-    ovs_type = vif['details'].get(constants.VIF_VHOSTUSER_OVS_TYPE,
-                                  "ovs-dpdk")
-    tap_fp_plug = vif['details'].get(constants.VIF_VHOSTUSER_TAP_FP_PLUG,
-                                     False)
-
-    if ovs_plug is True and ovs_type == 'ovs-fp':
-        plug_vhostuser_ovs_fp(self, instance, vif)
-    elif tap_fp_plug is True:
-        plug_vhostuser_tap_fp(self, instance, vif)
-    else:
-        _plug_vhostuser(self, instance, vif)
-
-
-def unplug_vhostuser(self, instance, vif):
-    ovs_plug = vif['details'].get(model.VIF_DETAILS_VHOSTUSER_OVS_PLUG,
-                                  False)
-    ovs_type = vif['details'].get(constants.VIF_VHOSTUSER_OVS_TYPE,
-                                  "ovs-dpdk")
-    tap_fp_plug = vif['details'].get(constants.VIF_VHOSTUSER_TAP_FP_PLUG,
-                                     False)
-
-    if ovs_plug is True and ovs_type == 'ovs-fp':
-        unplug_vhostuser_ovs_fp(self, instance, vif)
-    elif tap_fp_plug is True:
-        unplug_vhostuser_tap_fp(self, instance, vif)
-    else:
-        _unplug_vhostuser(self, instance, vif)
+        LOG.exception(_LE("Failed while unplugging vif"), instance=instance)

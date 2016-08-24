@@ -78,6 +78,7 @@ if is_service_enabled net-6wind; then
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         if is_service_enabled nova; then
             create_nova_rootwrap
+            nova_enable_monkey_patch
             nova_enable_vcpu_pinning
         fi
         if is_service_enabled neutron; then
