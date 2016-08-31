@@ -69,6 +69,8 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
         vif_details = self.vif_details.copy()
         vif_vhostuser_socket = get_vif_vhostuser_socket(context.current['id'])
         vif_details[portbindings.VHOST_USER_SOCKET] = vif_vhostuser_socket
-        vif_details[constants.VIF_VHOSTUSER_TAP_FP_PLUG] = True
+        mode = portbindings.VHOST_USER_MODE_CLIENT
 
-        return vif_details
+        vif_details[portbindings.VHOST_USER_MODE] = mode
+        vif_details[constants.VIF_VHOSTUSER_FP_PLUG] = True
+        return self.vif_details

@@ -46,7 +46,7 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
 
         SimpleAgentMechanismDriverBase.__init__(self,
                                                 n_constants.AGENT_TYPE_OVS,
-                                                constants.VIF_TYPE_VHOSTUSER,
+                                                portbindings.VIF_TYPE_VHOST_USER,
                                                 vif_details)
 
     def try_to_bind_segment_for_agent(self, context, segment, agent):
@@ -60,5 +60,5 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
     def _get_vif_details(self, context):
         vif_details = self.vif_details.copy()
         vif_vhostuser_socket = get_vif_vhostuser_socket(context.current['id'])
-        vif_details[constants.VIF_VHOSTUSER_SOCKET] = vif_vhostuser_socket
+        vif_details[portbindings.VHOST_USER_SOCKET] = vif_vhostuser_socket
         return vif_details
