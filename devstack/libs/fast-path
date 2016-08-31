@@ -151,3 +151,11 @@ function stop_fast_path {
     sudo fast-path.sh stop
     sudo pkill -SIGQUIT vrfd
 }
+
+function start_rpc_fp_server {
+    /usr/local/bin/rpc-fp-server &
+}
+
+function stop_rpc_fp_server {
+    killall rpc-fp-server
+}

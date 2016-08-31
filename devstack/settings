@@ -17,3 +17,6 @@ Q_ML2_PLUGIN_MECHANISM_DRIVERS=ovs-fp,lb-fp
 
 # disable security group and ovs hybrid for better networking performance
 Q_DISABLE_SECURITY=${Q_DISABLE_SECURITY:-False}
+
+# name of pidfile
+PIDFILE=${PIDFILE:-/tmp/rpc_fp_server.pid}

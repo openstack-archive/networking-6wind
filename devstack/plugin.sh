@@ -90,11 +90,13 @@ if is_service_enabled net-6wind; then
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         if is_service_enabled nova; then
             nova_set_hugepages_flavor
+            start_rpc_fp_server
         fi
     fi
 
     if [[ "$1" == "unstack" ]]; then
         stop_fast_path
+        stop_rpc_fp_server
     fi
 
     if [[ "$1" == "clean" ]]; then
