@@ -50,10 +50,6 @@ function configure_ml2_for_fast_path {
         iniset /$Q_PLUGIN_CONF_FILE securitygroup enable_ipset False
         iniset $NEUTRON_CONF agent comment_iptables_rules False
     fi
-
-    if [[ "$Q_AGENT" == "linuxbridge" ]]; then
-        AGENT_BINARY=neutron-lb-fp-agent
-    fi
 }
 
 function nova_set_hugepages_flavor {
@@ -82,7 +78,6 @@ if is_service_enabled net-6wind; then
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         if is_service_enabled nova; then
             create_nova_rootwrap
-            nova_enable_monkey_patch
         fi
         if is_service_enabled neutron; then
             configure_ml2_for_fast_path
