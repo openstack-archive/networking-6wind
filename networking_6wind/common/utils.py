@@ -17,8 +17,6 @@ import os
 
 from neutron.agent.linux import utils
 
-from networking_6wind.common import constants
-
 
 def check_fp_offload():
     try:
@@ -28,8 +26,6 @@ def check_fp_offload():
         return False
 
 
-def get_vif_vhostuser_socket(port_id):
-    vhostuser_socket_name = (constants.VIF_VHOSTUSER_SOCKET_PREFIX +
-                             port_id)
-    return os.path.join(constants.VIF_VHOSTUSER_SOCKET_DIR,
-                        vhostuser_socket_name)
+def get_vif_vhostuser_socket(socket_prefix, socket_dir, port_id):
+    vhostuser_socket_name = socket_prefix + port_id
+    return os.path.join(socket_dir, vhostuser_socket_name)

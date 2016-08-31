@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutron_lib import constants as n_const
 from oslo_config import cfg
 
 from networking_6wind.common import constants
@@ -24,30 +25,74 @@ from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
 from neutron.tests.unit.plugins.ml2.drivers.openvswitch.mech_driver import (
     test_mech_openvswitch as test_ovs)
 
+mode = portbindings.VHOST_USER_MODE_SERVER
+socket = get_vif_vhostuser_socket(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+                                  constants.VIF_VHOSTUSER_SOCKET_DIR,
+                                  base.PORT_ID)
+
 
 class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
-    VIF_TYPE = constants.VIF_TYPE_VHOSTUSER
+    VIF_TYPE = portbindings.VIF_TYPE_VHOST_USER
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: True,
                    portbindings.OVS_HYBRID_PLUG: True,
-                   portbindings.VHOST_USER_OVS_PLUG: True,
-                   constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp',
-                   constants.VIF_VHOSTUSER_SOCKET: get_vif_vhostuser_socket(
-                       base.PORT_ID)}
+                   constants.VIF_VHOSTUSER_FP_PLUG: True,
+                   constants.VIF_VHOSTUSER_FP_PLUG_TYPE: 'ovs',
+                   portbindings.VHOST_USER_MODE: mode,
+                   portbindings.VHOST_USER_SOCKET: socket}
+    AGENT_TYPE = n_const.AGENT_TYPE_OVS
+
+    GOOD_MAPPINGS = {'fake_physical_network': 'fake_bridge'}
+    GOOD_TUNNEL_TYPES = ['gre', 'vxlan']
+    GOOD_CONFIGS = {'bridge_mappings': GOOD_MAPPINGS,
+                    'tunnel_types': GOOD_TUNNEL_TYPES}
+
+    BAD_MAPPINGS = {'wrong_physical_network': 'wrong_bridge'}
+    BAD_TUNNEL_TYPES = ['bad_tunnel_type']
+    BAD_CONFIGS = {'bridge_mappings': BAD_MAPPINGS,
+                   'tunnel_types': BAD_TUNNEL_TYPES}
+
+    AGENTS = [{'alive': True,
+               'configurations': GOOD_CONFIGS,
+               'host': 'host',
+               'agent_type': AGENT_TYPE}]
+    AGENTS_DEAD = [{'alive': False,
+                    'configurations': GOOD_CONFIGS,
+                    'host': 'dead_host',
+                    'agent_type': AGENT_TYPE}]
+    AGENTS_BAD = [{'alive': False,
+                   'configurations': GOOD_CONFIGS,
+                   'host': 'bad_host_1',
+                   'agent_type': AGENT_TYPE},
+                  {'alive': True,
+                   'configurations': BAD_CONFIGS,
+                   'host': 'bad_host_2',
+                   'agent_type': AGENT_TYPE}]
+    FP_INFO = {
+        'product': 'unknown',
+        'product_version': 'unknown',
+        'timestamp': constants.BASE_TIMESTAMP,
+        'active': True,
+        'vhostuser_socket_dir': constants.VIF_VHOSTUSER_SOCKET_DIR,
+        'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+        'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
+        'supported_plugs': ['ovs', 'bridge'],
+    }
 
     def setUp(self):
         super(OVSFPMechanismBaseTestCase, self).setUp()
         self.driver = mech_ovs_fp.OVSFPMechanismDriver()
+        self.driver.needs_update = False
+        self.driver.fp_info = self.FP_INFO
         self.driver.initialize()
 
 
-class OVSFPMechanismSGDisabledBaseTestCase(
-    OVSFPMechanismBaseTestCase):
+class OVSFPMechanismSGDisabledBaseTestCase(OVSFPMechanismBaseTestCase):
     VIF_DETAILS = {portbindings.CAP_PORT_FILTER: False,
                    portbindings.OVS_HYBRID_PLUG: False,
-                   portbindings.VHOST_USER_OVS_PLUG: True,
-                   constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp',
-                   constants.VIF_VHOSTUSER_SOCKET: get_vif_vhostuser_socket(
-                       base.PORT_ID)}
+                   constants.VIF_VHOSTUSER_FP_PLUG: True,
+                   constants.VIF_VHOSTUSER_FP_PLUG_TYPE: 'ovs',
+                   portbindings.VHOST_USER_MODE: mode,
+                   portbindings.VHOST_USER_SOCKET: socket}
 
     def setUp(self):
         cfg.CONF.set_override('enable_security_group',

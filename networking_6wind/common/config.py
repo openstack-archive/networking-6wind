@@ -23,6 +23,8 @@ rpc_server_group = cfg.OptGroup(name='rpc_fp_server',
                                 title='RPC FP server options')
 vhostuser_group = cfg.OptGroup(name='vhostuser',
                                title='Vhostuser sockets options')
+mech_driver_group = cfg.OptGroup(name='ml2_fp',
+                                 title='ML2 FP plugin options')
 
 rpc_server_opts = [
     cfg.StrOpt('bind_host',
@@ -43,8 +45,22 @@ vhostuser_opts = [
                help='Prefix for socket filename'),
 ]
 
+mech_driver_opts = [
+    cfg.Opt('rpc_endpoint_port',
+            type=PortType,
+            default=8000,
+            help='Port number to where RPC endpoint is listening.'),
+    cfg.Opt('fp_info_max_age',
+            type=types.Integer(1, 300),
+            default=60,
+            help='Age (in seconds) of valid fastpath information before new'
+                 'update'),
+]
+
 CONF.register_group(rpc_server_group)
 CONF.register_group(vhostuser_group)
+CONF.register_group(mech_driver_group)
 
 CONF.register_opts(rpc_server_opts, group=rpc_server_group)
 CONF.register_opts(vhostuser_opts, group=vhostuser_group)
+CONF.register_opts(mech_driver_opts, group=mech_driver_group)

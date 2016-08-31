@@ -11,21 +11,23 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from oslo_config import cfg
 from oslo_log import log
+
+import datetime
 
 from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
 
-from neutron.agent import securitygroups_rpc
-from neutron.common import constants as n_constants
 from neutron.extensions import portbindings
 from neutron.plugins.ml2 import driver_api
-from neutron.plugins.ml2.drivers.mech_agent import (
-    SimpleAgentMechanismDriverBase)
 from neutron.plugins.ml2.drivers.openvswitch.mech_driver import (
     mech_openvswitch)
 
+import xmlrpclib
+
 LOG = log.getLogger(__name__)
+cfg.CONF.import_group('ml2_fp', 'networking_6wind.common.config')
 
 
 class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
@@ -38,27 +40,104 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
     """
 
     def __init__(self):
-        sg_enabled = securitygroups_rpc.is_firewall_enabled()
-        vif_details = {portbindings.CAP_PORT_FILTER: sg_enabled,
-                       portbindings.OVS_HYBRID_PLUG: sg_enabled,
-                       portbindings.VHOST_USER_OVS_PLUG: True,
-                       constants.VIF_VHOSTUSER_OVS_TYPE: 'ovs-fp'}
+        super(OVSFPMechanismDriver, self).__init__()
 
-        SimpleAgentMechanismDriverBase.__init__(self,
-                                                n_constants.AGENT_TYPE_OVS,
-                                                constants.VIF_TYPE_VHOSTUSER,
-                                                vif_details)
+        self.conf = cfg.CONF.ml2_fp
+        self.agent_ip = None
+        self.port = self.conf.rpc_endpoint_port
+        self.fp_info_max_age = self.conf.fp_info_max_age
+        self.fp_info = {
+            'timestamp': constants.BASE_TIMESTAMP,
+            'product': 'unknown',
+            'product_version': 'unknown',
+            'active': False,
+            'vhostuser_socket_dir': '',
+            'vhostuser_socket_prefix': '',
+            'vhostuser_socket_mode': '',
+            'supported_plugs': [],
+        }
+        self.is_first_update = True
+        self.needs_update = True
+
+    def _update_fp_info(self):
+        LOG.debug('Trying to retrieve fp_info from agent...')
+        if self.agent_ip:
+            try:
+                rpc_conn = xmlrpclib.ServerProxy('http://%s:%s' %
+                                                 (self.agent_ip, self.port))
+                self.fp_info = rpc_conn.get_fp_info()
+                LOG.debug('Correctly retrieved fp_info from agent: %s' %
+                          self.fp_info)
+                return
+            except Exception:
+                LOG.debug('Unable to retrieve fp_info from agent')
+                pass
+
+        self.fp_info = None
+
+    def _get_fp_info(self):
+        if self.fp_info is None:
+            return
+
+        ts_format = "%Y-%m-%d %H:%M:%S"
+        current_time = datetime.datetime.now().strftime(ts_format)
+        last_update = self.fp_info['timestamp']
+
+        t1 = datetime.datetime.strptime(current_time, ts_format)
+        t2 = datetime.datetime.strptime(last_update, ts_format)
+
+        tdelta = t1 - t2
+        age = tdelta.total_seconds()
+
+        if age >= self.fp_info_max_age:
+            self._update_fp_info()
 
     def try_to_bind_segment_for_agent(self, context, segment, agent):
+        self.agent_ip = agent['host']
+
+        if self.needs_update:
+            if self.is_first_update:
+                self._update_fp_info()
+                self.is_first_update = False
+            else:
+                self._get_fp_info()
+
         if self.check_segment_for_agent(segment, agent):
-            context.set_binding(segment[driver_api.ID], self.vif_type,
-                                self._get_vif_details(context))
+            context.set_binding(segment[driver_api.ID],
+                                self.get_vif_type(agent),
+                                self.get_vif_details(agent, context))
             return True
         else:
             return False
 
-    def _get_vif_details(self, context):
-        vif_details = self.vif_details.copy()
-        vif_vhostuser_socket = get_vif_vhostuser_socket(context.current['id'])
-        vif_details[constants.VIF_VHOSTUSER_SOCKET] = vif_vhostuser_socket
-        return vif_details
+    def get_vif_type(self, agent):
+        if self.fp_info is not None and self.fp_info['active']:
+            return portbindings.VIF_TYPE_VHOST_USER
+
+        return self.vif_type
+
+    def get_vif_details(self, agent, context):
+        self.vif_details = super(OVSFPMechanismDriver,
+                                 self).get_vif_details(agent, context)
+
+        if self.fp_info is not None and self.fp_info['active']:
+            if 'ovs' in self.fp_info['supported_plugs']:
+                socket_prefix = self.fp_info['vhostuser_socket_prefix']
+                socket_dir = self.fp_info['vhostuser_socket_dir']
+                socket = get_vif_vhostuser_socket(socket_prefix,
+                                                  socket_dir,
+                                                  context.current['id'])
+
+                if self.fp_info['vhostuser_socket_mode'] == 'client':
+                    qemu_mode = portbindings.VHOST_USER_MODE_SERVER
+                else:
+                    qemu_mode = portbindings.VHOST_USER_MODE_CLIENT
+
+                details_copy = self.vif_details.copy()
+                details_copy[portbindings.VHOST_USER_SOCKET] = socket
+                details_copy[portbindings.VHOST_USER_MODE] = qemu_mode
+                details_copy[constants.VIF_VHOSTUSER_FP_PLUG] = True
+                details_copy[constants.VIF_VHOSTUSER_FP_PLUG_TYPE] = 'ovs'
+                return details_copy
+
+        return self.vif_details
