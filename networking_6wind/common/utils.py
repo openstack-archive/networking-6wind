@@ -15,16 +15,6 @@
 
 import os
 
-from neutron.agent.linux import utils
-
-
-def check_fp_offload():
-    try:
-        utils.execute(cmd=['pidof', 'fp-rte'])
-        return True
-    except RuntimeError:
-        return False
-
 
 def get_vif_vhostuser_socket(socket_prefix, socket_dir, port_id):
     vhostuser_socket_name = socket_prefix + port_id
