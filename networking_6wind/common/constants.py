@@ -16,6 +16,8 @@
 
 # vhostuser fp plug
 VIF_VHOSTUSER_FP_PLUG = 'vhostuser_fp_plug'
+# vhostuser fp plug type
+VIF_VHOSTUSER_FP_PLUG_TYPE = 'vhostuser_fp_plug_type'
 
 # prefix for vhostuser socket name
 VIF_VHOSTUSER_SOCKET_PREFIX = 'vhost-socket-'
