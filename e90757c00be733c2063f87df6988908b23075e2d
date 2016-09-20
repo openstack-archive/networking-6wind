@@ -1,0 +1,8 @@
+Code-Review+2: Francesco Santoro <francesco.santoro@6wind.com>
+Workflow+1: Francesco Santoro <francesco.santoro@6wind.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 20 Sep 2016 16:00:55 +0000
+Reviewed-on: https://review.openstack.org/373091
+Project: openstack/networking-6wind
+Branch: refs/heads/master
