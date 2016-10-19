@@ -101,18 +101,21 @@ function set_va_opt {
 
 function write_va_conf {
     FP_CONF="/usr/local/etc/fast-path.env"
-    sudo cp /usr/local/etc/fast-path.env.tmpl $FP_CONF
 
-    if [[ -n $VM_MEMORY ]]; then
-        set_va_opt "VM_MEMORY" "$VM_MEMORY" $FP_CONF
-    fi
+    if [[ ! -f $FP_CONF ]]; then
+        sudo cp /usr/local/etc/fast-path.env.tmpl $FP_CONF
 
-    if [[ -n $FP_MEMORY ]]; then
-        set_va_opt "FP_MEMORY" "$FP_MEMORY" $FP_CONF
-    fi
+        if [[ -n $VM_MEMORY ]]; then
+            set_va_opt "VM_MEMORY" "$VM_MEMORY" $FP_CONF
+        fi
 
-    if [[ "$FP_GREEN_MODE" == "True" ]]; then
-        set_va_opt "MAINLOOP_DELAY_US" "500" $FP_CONF
+        if [[ -n $FP_MEMORY ]]; then
+            set_va_opt "FP_MEMORY" "$FP_MEMORY" $FP_CONF
+        fi
+
+        if [[ "$FP_GREEN_MODE" == "True" ]]; then
+            set_va_opt "MAINLOOP_DELAY_US" "500" $FP_CONF
+        fi
     fi
 }
 
