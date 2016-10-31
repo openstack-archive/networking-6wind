@@ -24,7 +24,6 @@ from neutron.plugins.ml2 import driver_api
 from neutron.plugins.ml2.drivers.linuxbridge.mech_driver import (
     mech_linuxbridge)
 
-import xmlrpclib
 
 LOG = log.getLogger(__name__)
 cfg.CONF.import_group('ml2_fp', 'networking_6wind.common.config')
@@ -43,8 +42,6 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
         super(LBFPMechanismDriver, self).__init__()
 
         self.conf = cfg.CONF.ml2_fp
-        self.agent_ip = None
-        self.port = self.conf.rpc_endpoint_port
         self.fp_info_max_age = self.conf.fp_info_max_age
         self.fp_info = {
             'timestamp': constants.BASE_TIMESTAMP,
@@ -58,20 +55,15 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
         }
         self.is_first_update = True
         self.needs_update = True
+        self.fp_agent = None
 
     def _update_fp_info(self):
         LOG.debug('Trying to retrieve fp_info from agent...')
-        if self.agent_ip:
-            try:
-                rpc_conn = xmlrpclib.ServerProxy('http://%s:%s' %
-                                                 (self.agent_ip, self.port))
-                self.fp_info = rpc_conn.get_fp_info()
-                LOG.debug('Correctly retrieved fp_info from agent: %s' %
-                          self.fp_info)
-                return
-            except Exception:
-                LOG.debug('Unable to retrieve fp_info from agent')
-                pass
+        if self.fp_agent is not None:
+            self.fp_info = self.fp_agent['configurations']
+            LOG.debug('Correctly retrieved fp_info from agent: %s' %
+                      self.fp_info)
+            return
 
         self.fp_info = None
 
@@ -93,7 +85,10 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
             self._update_fp_info()
 
     def try_to_bind_segment_for_agent(self, context, segment, agent):
-        self.agent_ip = agent['host']
+        if self.fp_agent is None:
+            for fp_agent in context.host_agents(constants.FP_AGENT_TYPE):
+                LOG.debug("Checking agent: %s", fp_agent)
+                self.fp_agent = fp_agent
 
         if self.needs_update:
             if self.is_first_update:

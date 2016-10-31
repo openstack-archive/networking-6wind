@@ -134,7 +134,7 @@ function stop_va {
 }
 
 function start_rpc_fp_server {
-    /usr/local/bin/rpc-fp-server &
+    /usr/local/bin/neutron-fastpath-agent &
 }
 
 function stop_rpc_fp_server {
