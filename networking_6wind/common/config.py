@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 from oslo_config import cfg
 from oslo_config import types
 
@@ -43,6 +44,9 @@ vhostuser_opts = [
     cfg.StrOpt('socket_prefix',
                default='vhost-socket-',
                help='Prefix for socket filename'),
+    cfg.StrOpt('mode',
+               default='client',
+               help='Socket mode'),
 ]
 
 mech_driver_opts = [
