@@ -26,3 +26,6 @@ BASE_TIMESTAMP = '1970-01-01 00:00:00'
 
 # linuxbridge name prefix
 BRIDGE_PREFIX = 'brq'
+
+# fp agent type
+FP_AGENT_TYPE = '6WIND Fast Path agent'

@@ -25,6 +25,7 @@ XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
 NET_6WIND_DIR=$DEST/networking-6wind
+NET_6WIND_AGT_BIN_DIR=$(get_python_exec_prefix)
 NOVA_ROOTWRAP=$(get_rootwrap_location nova)
 
 function create_nova_rootwrap {
@@ -93,13 +94,13 @@ if is_service_enabled net-6wind; then
         fi
 
         if is_service_enabled n-cpu; then
-            start_rpc_fp_server
+            run_process net-6wind-agt "$NET_6WIND_AGT_BIN_DIR/neutron-fastpath-agent"
         fi
     fi
 
     if [[ "$1" == "unstack" ]]; then
         if is_service_enabled n-cpu; then
-            stop_rpc_fp_server
+            stop_process net-6wind-agt
             stop_va
         fi
     fi

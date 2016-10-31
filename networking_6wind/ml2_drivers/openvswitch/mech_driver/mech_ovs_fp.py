@@ -24,7 +24,6 @@ from neutron.plugins.ml2 import driver_api
 from neutron.plugins.ml2.drivers.openvswitch.mech_driver import (
     mech_openvswitch)
 
-import xmlrpclib
 
 LOG = log.getLogger(__name__)
 cfg.CONF.import_group('ml2_fp', 'networking_6wind.common.config')
@@ -43,8 +42,6 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         super(OVSFPMechanismDriver, self).__init__()
 
         self.conf = cfg.CONF.ml2_fp
-        self.agent_ip = None
-        self.port = self.conf.rpc_endpoint_port
         self.fp_info_max_age = self.conf.fp_info_max_age
         self.fp_info = {
             'timestamp': constants.BASE_TIMESTAMP,
@@ -59,23 +56,18 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         self.is_first_update = True
         self.needs_update = True
 
-    def _update_fp_info(self):
+    def _update_fp_info(self, context):
         LOG.debug('Trying to retrieve fp_info from agent...')
-        if self.agent_ip:
-            try:
-                rpc_conn = xmlrpclib.ServerProxy('http://%s:%s' %
-                                                 (self.agent_ip, self.port))
-                self.fp_info = rpc_conn.get_fp_info()
-                LOG.debug('Correctly retrieved fp_info from agent: %s' %
-                          self.fp_info)
-                return
-            except Exception:
-                LOG.debug('Unable to retrieve fp_info from agent')
-                pass
+        for fp_agent in context.host_agents(constants.FP_AGENT_TYPE):
+            LOG.debug("Checking agent: %s", fp_agent)
+            self.fp_info = fp_agent['configurations']
+            LOG.debug('Correctly retrieved fp_info from agent: %s' %
+                      self.fp_info)
+            return
 
         self.fp_info = None
 
-    def _get_fp_info(self):
+    def _get_fp_info(self, context):
         if self.fp_info is None:
             return
 
@@ -90,17 +82,15 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         age = tdelta.total_seconds()
 
         if age >= self.fp_info_max_age:
-            self._update_fp_info()
+            self._update_fp_info(context)
 
     def try_to_bind_segment_for_agent(self, context, segment, agent):
-        self.agent_ip = agent['host']
-
         if self.needs_update:
             if self.is_first_update:
-                self._update_fp_info()
+                self._update_fp_info(context)
                 self.is_first_update = False
             else:
-                self._get_fp_info()
+                self._get_fp_info(context)
 
         if self.check_segment_for_agent(segment, agent):
             context.set_binding(segment[driver_api.ID],

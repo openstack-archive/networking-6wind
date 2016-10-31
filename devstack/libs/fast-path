@@ -132,11 +132,3 @@ function start_va {
 function stop_va {
     sudo service virtual-accelerator stop
 }
-
-function start_rpc_fp_server {
-    /usr/local/bin/rpc-fp-server &
-}
-
-function stop_rpc_fp_server {
-    killall rpc-fp-server
-}
