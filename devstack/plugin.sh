@@ -68,36 +68,47 @@ if is_service_enabled net-6wind; then
 
     if [[ "$1" == "stack" && "$2" == "pre-install" ]]; then
         if [[ "$OFFLINE" != "True" ]]; then
-            setup_va_repo
-            install_va
+            if is_service_enabled n-cpu; then
+                setup_va_repo
+                install_va
+            fi
         fi
     elif [[ "$1" == "stack" && "$2" == "install" ]]; then
-        write_va_conf
-        start_va
+        if is_service_enabled n-cpu; then
+            start_va
+        fi
         setup_develop $DEST/networking-6wind
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
-        if is_service_enabled nova; then
+        if is_service_enabled n-cpu; then
             create_nova_rootwrap
             nova_enable_vcpu_pinning
         fi
-        if is_service_enabled neutron; then
+
+        if is_service_enabled neutron-agent; then
             configure_ml2_for_fast_path
         fi
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         if is_service_enabled nova; then
             nova_set_hugepages_flavor
+        fi
+
+        if is_service_enabled n-cpu; then
             start_rpc_fp_server
         fi
     fi
 
     if [[ "$1" == "unstack" ]]; then
-        stop_rpc_fp_server
-        stop_va
+        if is_service_enabled n-cpu; then
+            stop_rpc_fp_server
+            stop_va
+        fi
     fi
 
     if [[ "$1" == "clean" ]]; then
-        uninstall_va
-        remove_va_repo
+        if is_service_enabled n-cpu; then
+            uninstall_va
+            remove_va_repo
+        fi
     fi
 fi
 
