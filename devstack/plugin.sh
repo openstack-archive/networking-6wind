@@ -77,7 +77,7 @@ if is_service_enabled net-6wind; then
         if is_service_enabled n-cpu; then
             start_va
         fi
-        setup_develop $DEST/networking-6wind
+        setup_install $DEST/networking-6wind
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         if is_service_enabled n-cpu; then
             create_nova_rootwrap
