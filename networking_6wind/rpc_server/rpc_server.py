@@ -19,15 +19,14 @@ from oslo_config import cfg
 
 from pkg_resources import parse_version as V
 
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+import SimpleXMLRPCServer
 
 cfg.CONF.import_group('rpc_fp_server', 'networking_6wind.common.config')
 cfg.CONF.import_group('vhostuser', 'networking_6wind.common.config')
 
 
 # Restrict to a particular path.
-class RequestHandler(SimpleXMLRPCRequestHandler):
+class RequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RPC2',)
 
 
@@ -36,9 +35,10 @@ class RpcFPServer(object):
         self.conf_rpc = cfg.CONF.rpc_fp_server
         self.conf_vhostuser = cfg.CONF.vhostuser
 
-        self.server = SimpleXMLRPCServer((self.conf_rpc.bind_host,
-                                          self.conf_rpc.bind_port),
-                                         requestHandler=RequestHandler)
+        self.server = SimpleXMLRPCServer.SimpleXMLRPCServer(
+            (self.conf_rpc.bind_host,
+             self.conf_rpc.bind_port),
+            requestHandler=RequestHandler)
         self.fp_info = {
             'timestamp': '',
             'product': 'unknown',
