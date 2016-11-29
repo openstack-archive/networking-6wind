@@ -1,0 +1,8 @@
+Code-Review+2: Vincent Jardin <vincent.jardin@6wind.com>
+Workflow+1: Vincent Jardin <vincent.jardin@6wind.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 29 Nov 2016 21:49:20 +0000
+Reviewed-on: https://review.openstack.org/396305
+Project: openstack/networking-6wind
+Branch: refs/heads/master
