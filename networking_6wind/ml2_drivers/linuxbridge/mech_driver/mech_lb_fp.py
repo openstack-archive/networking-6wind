@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from neutron_lib.api.definitions import portbindings
 from oslo_config import cfg
 from oslo_log import log
 
@@ -19,7 +20,6 @@ import datetime
 from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
 
-from neutron.extensions import portbindings
 from neutron.plugins.ml2 import driver_api
 from neutron.plugins.ml2.drivers.linuxbridge.mech_driver import (
     mech_linuxbridge)
