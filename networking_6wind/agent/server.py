@@ -36,6 +36,9 @@ cfg.CONF.import_group('vhostuser', 'networking_6wind.common.config')
 
 LOG = logging.getLogger(__name__)
 
+CFG_PATH="/etc"
+PRODUCT_FILE="6WIND_product"
+PRODUCT_VERSION_FILE="6WIND_product_version"
 
 class NeutronFastPathAgent(manager.Manager):
 
@@ -81,9 +84,9 @@ class NeutronFastPathAgent(manager.Manager):
             fp_info_dict['active'] = False
 
     def _init_fp_info(self):
-        with open('/usr/local/etc/6WIND_product') as f:
+        with open(os.path.join(CFG_PATH, PRODUCT_FILE)) as f:
             self.fp_info['product'] = f.read(2048).rstrip()
-        with open('/usr/local/etc/6WIND_product_version') as f:
+        with open(os.path.join(CFG_PATH, PRODUCT_VERSION_FILE)) as f:
             self.fp_info['product_version'] = f.read(2048).rstrip()
 
         self._update_fp_status(self.fp_info)
