@@ -17,7 +17,7 @@ import os
 
 from networking_6wind.common import constants
 
-from neutron._i18n import _LE
+from networking_6wind._i18n import _LE
 from neutron.agent import rpc as agent_rpc
 
 from neutron import manager
