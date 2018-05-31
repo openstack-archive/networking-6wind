@@ -20,10 +20,12 @@ from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
 from networking_6wind.ml2_drivers.openvswitch.mech_driver import mech_ovs_fp
 
-from neutron.extensions import portbindings
+from neutron.plugins.ml2.drivers.openvswitch.agent.common import (
+    constants as a_const)
 from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
 from neutron.tests.unit.plugins.ml2.drivers.openvswitch.mech_driver import (
     test_mech_openvswitch as test_ovs)
+from neutron_lib.api.definitions import portbindings
 
 mode = portbindings.VHOST_USER_MODE_SERVER
 socket = get_vif_vhostuser_socket(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
@@ -37,8 +39,9 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
 
     VIF_BRIDGE = portbindings.VIF_TYPE_BRIDGE
 
-    VIF_DETAILS = {portbindings.CAP_PORT_FILTER: True,
-                   portbindings.OVS_HYBRID_PLUG: True,
+    VIF_DETAILS = {portbindings.OVS_DATAPATH_TYPE: a_const.OVS_DATAPATH_SYSTEM,
+                   portbindings.CAP_PORT_FILTER: False,
+                   portbindings.OVS_HYBRID_PLUG: False,
                    constants.VIF_VHOSTUSER_FP_PLUG: True,
                    portbindings.VHOST_USER_OVS_PLUG: True,
                    portbindings.VHOST_USER_MODE: mode,
