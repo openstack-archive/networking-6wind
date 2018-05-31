@@ -19,10 +19,10 @@ import datetime
 from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
 
-from neutron.extensions import portbindings
-from neutron.plugins.ml2 import driver_api
 from neutron.plugins.ml2.drivers.openvswitch.mech_driver import (
     mech_openvswitch)
+from neutron_lib.api.definitions import portbindings
+from neutron_lib.plugins.ml2 import api
 
 
 LOG = log.getLogger(__name__)
@@ -93,22 +93,22 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
                 self._get_fp_info(context)
 
         if self.check_segment_for_agent(segment, agent):
-            context.set_binding(segment[driver_api.ID],
-                                self.get_vif_type(agent),
-                                self.get_vif_details(agent, context))
+            context.set_binding(segment[api.ID],
+                                self.get_vif_type(context, agent, segment),
+                                self.get_vif_details(context, agent, segment))
             return True
         else:
             return False
 
-    def get_vif_type(self, agent):
+    def get_vif_type(self, context, agent, segment):
         if self.fp_info is not None and self.fp_info['active']:
             return portbindings.VIF_TYPE_VHOST_USER
 
         return self.vif_type
 
-    def get_vif_details(self, agent, context):
+    def get_vif_details(self, context, agent, segment):
         self.vif_details = super(OVSFPMechanismDriver,
-                                 self).get_vif_details(agent, context)
+                                 self).get_vif_details(context, agent, segment)
 
         VIF_OVS = portbindings.VIF_TYPE_OVS
         if self.fp_info is not None and self.fp_info['active']:
