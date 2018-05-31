@@ -19,12 +19,12 @@ from networking_6wind.common import constants
 
 from neutron._i18n import _LE
 from neutron.agent import rpc as agent_rpc
-from neutron.common import topics
 
-from neutron import context
 from neutron import manager
 
+from neutron_lib.agent import topics
 from neutron_lib import constants as n_constants
+from neutron_lib import context
 
 from oslo_config import cfg
 from oslo_log import log as logging
