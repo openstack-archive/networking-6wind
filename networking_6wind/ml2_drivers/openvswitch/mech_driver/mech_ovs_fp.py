@@ -100,15 +100,15 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         else:
             return False
 
-    def get_vif_type(self, agent):
+    def get_vif_type(self, context, agent, segment):
         if self.fp_info is not None and self.fp_info['active']:
             return portbindings.VIF_TYPE_VHOST_USER
 
         return self.vif_type
 
-    def get_vif_details(self, agent, context):
+    def get_vif_details(self, context, agent, segment):
         self.vif_details = super(OVSFPMechanismDriver,
-                                 self).get_vif_details(agent, context)
+                                 self).get_vif_details(context, agent, segment)
 
         VIF_OVS = portbindings.VIF_TYPE_OVS
         if self.fp_info is not None and self.fp_info['active']:
