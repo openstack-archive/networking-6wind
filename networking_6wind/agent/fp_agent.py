@@ -19,14 +19,13 @@ import sys
 from oslo_config import cfg
 from oslo_service import service
 
-from neutron.agent.common import config
 from neutron.common import config as common_config
 from neutron import service as neutron_service
 
 
 def main():
     common_config.init(sys.argv[1:])
-    config.setup_logging()
+    common_config.setup_logging()
     server = neutron_service.Service.create(
         binary='neutron-fastpath-agent',
         topic="FP_AGENT",
