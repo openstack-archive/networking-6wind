@@ -31,4 +31,4 @@ def main():
         topic="FP_AGENT",
         report_interval=30,
         manager='networking_6wind.agent.server.NeutronFastPathAgent')
-    service.launch(cfg.CONF, server).wait()
+    service.launch(cfg.CONF, server, restart_method='mutate').wait()
