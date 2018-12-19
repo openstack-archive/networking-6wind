@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron_lib import constants as n_const
 from oslo_config import cfg
 
 from networking_6wind.common import constants
@@ -31,11 +30,12 @@ mode = portbindings.VHOST_USER_MODE_SERVER
 socket = get_vif_vhostuser_socket(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
                                   constants.VIF_VHOSTUSER_SOCKET_DIR,
                                   base.PORT_ID)
-VIF_OVS = portbindings.VIF_TYPE_OVS
 
 
 class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
     VIF_TYPE = portbindings.VIF_TYPE_VHOST_USER
+
+    VIF_OVS = portbindings.VIF_TYPE_OVS
 
     VIF_BRIDGE = portbindings.VIF_TYPE_BRIDGE
 
@@ -46,50 +46,60 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
                    portbindings.VHOST_USER_OVS_PLUG: True,
                    portbindings.VHOST_USER_MODE: mode,
                    portbindings.VHOST_USER_SOCKET: socket}
-    AGENT_TYPE = n_const.AGENT_TYPE_OVS
+    AGENT_TYPE = constants.FP_AGENT_TYPE
 
     GOOD_MAPPINGS = {'fake_physical_network': 'fake_bridge'}
     GOOD_TUNNEL_TYPES = ['gre', 'vxlan']
-    GOOD_CONFIGS = {'bridge_mappings': GOOD_MAPPINGS,
-                    'tunnel_types': GOOD_TUNNEL_TYPES}
-
     BAD_MAPPINGS = {'wrong_physical_network': 'wrong_bridge'}
     BAD_TUNNEL_TYPES = ['bad_tunnel_type']
-    BAD_CONFIGS = {'bridge_mappings': BAD_MAPPINGS,
-                   'tunnel_types': BAD_TUNNEL_TYPES}
 
-    AGENTS = [{'alive': True,
-               'configurations': GOOD_CONFIGS,
-               'host': 'host',
-               'agent_type': AGENT_TYPE}]
-    AGENTS_DEAD = [{'alive': False,
-                    'configurations': GOOD_CONFIGS,
-                    'host': 'dead_host',
-                    'agent_type': AGENT_TYPE}]
-    AGENTS_BAD = [{'alive': False,
-                   'configurations': GOOD_CONFIGS,
-                   'host': 'bad_host_1',
-                   'agent_type': AGENT_TYPE},
-                  {'alive': True,
-                   'configurations': BAD_CONFIGS,
-                   'host': 'bad_host_2',
-                   'agent_type': AGENT_TYPE}]
-    FP_INFO = {
-        'product': 'unknown',
-        'product_version': 'unknown',
+    GOOD_FP_INFO = {
+        'product': 'virtual-accelerator',
+        'product_version': '4.0',
         'timestamp': constants.BASE_TIMESTAMP,
         'active': True,
         'vhostuser_socket_dir': constants.VIF_VHOSTUSER_SOCKET_DIR,
         'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
         'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
         'supported_plugs': [VIF_OVS, VIF_BRIDGE],
+        'tunnel_types': GOOD_TUNNEL_TYPES,
+        'bridge_mappings': GOOD_MAPPINGS,
     }
+
+    BAD_FP_INFO = {
+        'product': 'unknown',
+        'product_version': 'unknown',
+        'timestamp': constants.BASE_TIMESTAMP,
+        'active': False,
+        'vhostuser_socket_dir': constants.VIF_VHOSTUSER_SOCKET_DIR,
+        'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+        'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
+        'supported_plugs': [VIF_OVS, VIF_BRIDGE],
+        'tunnel_types': BAD_TUNNEL_TYPES,
+        'bridge_mappings': BAD_MAPPINGS,
+    }
+
+    AGENTS = [{'alive': True,
+               'configurations': GOOD_FP_INFO,
+               'host': 'host',
+               'agent_type': AGENT_TYPE}]
+    AGENTS_DEAD = [{'alive': False,
+                    'configurations': GOOD_FP_INFO,
+                    'host': 'host',
+                    'agent_type': AGENT_TYPE}]
+    AGENTS_BAD = [{'alive': False,
+                   'configurations': GOOD_FP_INFO,
+                   'host': 'bad_host_1',
+                   'agent_type': AGENT_TYPE},
+                  {'alive': True,
+                   'configurations': BAD_FP_INFO,
+                   'host': 'bad_host_2',
+                   'agent_type': AGENT_TYPE}]
 
     def setUp(self):
         super(OVSFPMechanismBaseTestCase, self).setUp()
         self.driver = mech_ovs_fp.OVSFPMechanismDriver()
-        self.driver.needs_update = False
-        self.driver.fp_info = self.FP_INFO
+        self.driver.fp_info = self.BAD_FP_INFO
         self.driver.initialize()
 
 

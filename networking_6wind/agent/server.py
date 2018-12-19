@@ -32,7 +32,7 @@ from oslo_service import loopingcall
 from pkg_resources import parse_version as V
 
 cfg.CONF.import_group('vhostuser', 'networking_6wind.common.config')
-
+cfg.CONF.import_group('ml2_fp', 'networking_6wind.common.config')
 LOG = logging.getLogger(__name__)
 
 CFG_PATH = "/etc"
@@ -54,6 +54,7 @@ class NeutronFastPathAgent(manager.Manager):
             'vhostuser_socket_prefix': self.conf.vhostuser.socket_prefix,
             'vhostuser_socket_mode': self.conf.vhostuser.mode,
             'supported_plugs': [],
+            'tunnel_types': self.conf.ml2_fp.tunnel_types or [],
         }
         self.agent_state = {
             'binary': 'neutron-fastpath-agent',
