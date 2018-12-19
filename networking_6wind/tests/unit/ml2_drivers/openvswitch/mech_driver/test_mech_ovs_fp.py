@@ -31,11 +31,12 @@ mode = portbindings.VHOST_USER_MODE_SERVER
 socket = get_vif_vhostuser_socket(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
                                   constants.VIF_VHOSTUSER_SOCKET_DIR,
                                   base.PORT_ID)
-VIF_OVS = portbindings.VIF_TYPE_OVS
 
 
 class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
     VIF_TYPE = portbindings.VIF_TYPE_VHOST_USER
+
+    VIF_OVS = portbindings.VIF_TYPE_OVS
 
     VIF_BRIDGE = portbindings.VIF_TYPE_BRIDGE
 
@@ -88,7 +89,6 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
     def setUp(self):
         super(OVSFPMechanismBaseTestCase, self).setUp()
         self.driver = mech_ovs_fp.OVSFPMechanismDriver()
-        self.driver.needs_update = False
         self.driver.fp_info = self.FP_INFO
         self.driver.initialize()
 

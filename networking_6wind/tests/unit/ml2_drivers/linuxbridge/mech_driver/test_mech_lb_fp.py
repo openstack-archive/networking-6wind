@@ -81,7 +81,6 @@ class LBFPMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
     def setUp(self):
         super(LBFPMechanismBaseTestCase, self).setUp()
         self.driver = mech_lb_fp.LBFPMechanismDriver()
-        self.driver.needs_update = False
         self.driver.fp_info = self.FP_INFO
         self.driver.initialize()
 
