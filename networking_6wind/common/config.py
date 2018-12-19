@@ -13,16 +13,12 @@
 #    under the License.
 
 from oslo_config import cfg
-from oslo_config import types
 
 
 CONF = cfg.CONF
 
 vhostuser_group = cfg.OptGroup(name='vhostuser',
                                title='Vhostuser sockets options')
-mech_driver_group = cfg.OptGroup(name='ml2_fp',
-                                 title='ML2 FP plugin options')
-
 
 vhostuser_opts = [
     cfg.StrOpt('socket_dir',
@@ -36,16 +32,5 @@ vhostuser_opts = [
                help='Socket mode'),
 ]
 
-mech_driver_opts = [
-    cfg.Opt('fp_info_max_age',
-            type=types.Integer(1, 300),
-            default=60,
-            help='Age (in seconds) of valid fastpath information before new'
-                 'update'),
-]
-
 CONF.register_group(vhostuser_group)
-CONF.register_group(mech_driver_group)
-
 CONF.register_opts(vhostuser_opts, group=vhostuser_group)
-CONF.register_opts(mech_driver_opts, group=mech_driver_group)
