@@ -11,16 +11,15 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from neutron_lib.api.definitions import portbindings
+from neutron_lib import constants as n_constants
+from neutron_lib.plugins.ml2 import api
 from oslo_log import log
 
 from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
-
 from neutron.plugins.ml2.drivers.linuxbridge.mech_driver import (
     mech_linuxbridge)
-from neutron_lib.api.definitions import portbindings
-from neutron_lib.plugins.ml2 import api
-
 
 LOG = log.getLogger(__name__)
 
@@ -41,25 +40,34 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
         self.agent_type = constants.FP_AGENT_TYPE
         self.fp_info = None
 
+    def _get_lb_agent(self, context):
+        for agent in context.host_agents(n_constants.AGENT_TYPE_LINUXBRIDGE):
+            if agent.get('alive'):
+                return agent
+        return None
+
     def try_to_bind_segment_for_agent(self, context, segment, agent):
-        if not self.check_segment_for_agent(segment, agent):
+        lb_agent = self._get_lb_agent(context)
+        if lb_agent is None:
+            LOG.error("Refusing to bind port %s due to "
+                      "dead neutron-linuxbridge-agent" % context.current['id'])
             return False
-        LOG.debug("Trying to retrieve fp_info from agent...")
+        # pass lb_agent, because it contains supported tunnel type in its
+        # 'configurations' dict
+        if not self.check_segment_for_agent(segment, lb_agent):
+            return False
+        LOG.debug("Trying to retrieve fp_info from %s..." % agent)
         self.fp_info = agent.get('configurations')
         if self.fp_info is None or not self.fp_info['active']:
-            LOG.warning("Can't retrieve fp_info")
+            LOG.error("Can't retrieve fp_info")
             return False
-        LOG.debug("Correctly retrieved fp_info from agent: %s" % self.fp_info)
+        LOG.debug("Correctly retrieved fp_info: %s" % self.fp_info)
         if portbindings.VIF_TYPE_BRIDGE not in self.fp_info['supported_plugs']:
             LOG.error("vif_type %s is not supported in ovs-lb ML2 mechanism "
                       " driver" % portbindings.VIF_TYPE_BRIDGE)
-        context.set_binding(segment[api.ID],
-                            self.get_vif_type(context, agent, segment),
+        context.set_binding(segment[api.ID], portbindings.VIF_TYPE_VHOST_USER,
                             self.get_vif_details(context, agent, segment))
         return True
-
-    def get_vif_type(self, context, agent, segment):
-        return portbindings.VIF_TYPE_VHOST_USER
 
     def get_vif_details(self, context, agent, segment):
         socket_prefix = self.fp_info['vhostuser_socket_prefix']
