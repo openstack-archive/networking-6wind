@@ -13,18 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutron_lib.api.definitions import portbindings
+from neutron_lib import constants as n_const
 from oslo_config import cfg
 
 from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
 from networking_6wind.ml2_drivers.openvswitch.mech_driver import mech_ovs_fp
+from networking_6wind.tests.unit.ml2_drivers import _test_mech_agent as base
 
 from neutron.plugins.ml2.drivers.openvswitch.agent.common import (
     constants as a_const)
-from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
 from neutron.tests.unit.plugins.ml2.drivers.openvswitch.mech_driver import (
     test_mech_openvswitch as test_ovs)
-from neutron_lib.api.definitions import portbindings
 
 mode = portbindings.VHOST_USER_MODE_SERVER
 socket = get_vif_vhostuser_socket(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
@@ -40,8 +41,8 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
     VIF_BRIDGE = portbindings.VIF_TYPE_BRIDGE
 
     VIF_DETAILS = {portbindings.OVS_DATAPATH_TYPE: a_const.OVS_DATAPATH_SYSTEM,
-                   portbindings.CAP_PORT_FILTER: False,
-                   portbindings.OVS_HYBRID_PLUG: False,
+                   portbindings.CAP_PORT_FILTER: True,
+                   portbindings.OVS_HYBRID_PLUG: True,
                    constants.VIF_VHOSTUSER_FP_PLUG: True,
                    portbindings.VHOST_USER_OVS_PLUG: True,
                    portbindings.VHOST_USER_MODE: mode,
@@ -50,8 +51,8 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
 
     GOOD_MAPPINGS = {'fake_physical_network': 'fake_bridge'}
     GOOD_TUNNEL_TYPES = ['gre', 'vxlan']
-    BAD_MAPPINGS = {'wrong_physical_network': 'wrong_bridge'}
-    BAD_TUNNEL_TYPES = ['bad_tunnel_type']
+    GOOD_CONFIGS = {'bridge_mappings': GOOD_MAPPINGS,
+                    'tunnel_types': GOOD_TUNNEL_TYPES}
 
     GOOD_FP_INFO = {
         'product': 'virtual-accelerator',
@@ -62,8 +63,6 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
         'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
         'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
         'supported_plugs': [VIF_OVS, VIF_BRIDGE],
-        'tunnel_types': GOOD_TUNNEL_TYPES,
-        'bridge_mappings': GOOD_MAPPINGS,
     }
 
     BAD_FP_INFO = {
@@ -75,26 +74,32 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
         'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
         'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
         'supported_plugs': [VIF_OVS, VIF_BRIDGE],
-        'tunnel_types': BAD_TUNNEL_TYPES,
-        'bridge_mappings': BAD_MAPPINGS,
     }
 
     AGENTS = [{'alive': True,
                'configurations': GOOD_FP_INFO,
                'host': 'host',
-               'agent_type': AGENT_TYPE}]
+               'agent_type': AGENT_TYPE},
+              {'alive': True,
+               'configurations': GOOD_CONFIGS,
+               'host': 'host',
+               'agent_type': n_const.AGENT_TYPE_OVS}]
     AGENTS_DEAD = [{'alive': False,
                     'configurations': GOOD_FP_INFO,
                     'host': 'host',
-                    'agent_type': AGENT_TYPE}]
-    AGENTS_BAD = [{'alive': False,
-                   'configurations': GOOD_FP_INFO,
-                   'host': 'bad_host_1',
-                   'agent_type': AGENT_TYPE},
-                  {'alive': True,
+                    'agent_type': AGENT_TYPE},
+                   {'alive': False,
+                    'configurations': GOOD_CONFIGS,
+                    'host': 'host',
+                    'agent_type': n_const.AGENT_TYPE_OVS}]
+    AGENTS_BAD = [{'alive': True,
                    'configurations': BAD_FP_INFO,
                    'host': 'bad_host_2',
-                   'agent_type': AGENT_TYPE}]
+                   'agent_type': AGENT_TYPE},
+                  {'alive': True,
+                   'configurations': GOOD_CONFIGS,
+                   'host': 'bad_host_2',
+                   'agent_type': n_const.AGENT_TYPE_OVS}]
 
     def setUp(self):
         super(OVSFPMechanismBaseTestCase, self).setUp()
@@ -120,31 +125,31 @@ class OVSFPMechanismSGDisabledBaseTestCase(OVSFPMechanismBaseTestCase):
 
 
 class OVSFPMechanismGenericTestCase(OVSFPMechanismBaseTestCase,
-                                    base.AgentMechanismGenericTestCase):
+                                    base.FPMechanismGenericTestCase):
     pass
 
 
 class OVSFPMechanismLocalTestCase(OVSFPMechanismBaseTestCase,
-                                  base.AgentMechanismLocalTestCase):
+                                  base.FPMechanismLocalTestCase):
     pass
 
 
 class OVSFPMechanismFlatTestCase(OVSFPMechanismBaseTestCase,
-                                 base.AgentMechanismFlatTestCase):
+                                 base.FPMechanismFlatTestCase):
     pass
 
 
 class OVSFPMechanismVlanTestCase(OVSFPMechanismBaseTestCase,
-                                 base.AgentMechanismVlanTestCase):
+                                 base.FPMechanismVlanTestCase):
     pass
 
 
 class OVSFPMechanismGreTestCase(OVSFPMechanismBaseTestCase,
-                                base.AgentMechanismGreTestCase):
+                                base.FPMechanismGreTestCase):
     pass
 
 
 class OVSFPMechanismSGDisabledLocalTestCase(
     OVSFPMechanismSGDisabledBaseTestCase,
-    base.AgentMechanismLocalTestCase):
+    base.FPMechanismLocalTestCase):
     pass

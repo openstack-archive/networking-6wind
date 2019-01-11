@@ -12,16 +12,19 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from neutron_lib.api.definitions import portbindings
+from neutron_lib import constants as n_const
 
 from networking_6wind.common import constants
 from networking_6wind.common.utils import get_vif_vhostuser_socket
 from networking_6wind.ml2_drivers.linuxbridge.mech_driver import mech_lb_fp
+from networking_6wind.tests.unit.ml2_drivers import _test_mech_agent as base
 
-from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
-from neutron_lib.api.definitions import portbindings
+from neutron.tests.unit.plugins.ml2.drivers.linuxbridge.mech_driver import (
+    test_mech_linuxbridge as test_lb)
 
 
-class LBFPMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
+class LBFPMechanismBaseTestCase(test_lb.LinuxbridgeMechanismBaseTestCase):
     mode = portbindings.VHOST_USER_MODE_SERVER
     socket = get_vif_vhostuser_socket(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
                                       constants.VIF_VHOSTUSER_SOCKET_DIR,
@@ -42,8 +45,8 @@ class LBFPMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
 
     GOOD_MAPPINGS = {'fake_physical_network': 'fake_interface'}
     GOOD_TUNNEL_TYPES = ['gre', 'vxlan']
-    BAD_MAPPINGS = {'wrong_physical_network': 'wrong_interface'}
-    BAD_TUNNEL_TYPES = ['bad_tunnel_type']
+    GOOD_CONFIGS = {'bridge_mappings': GOOD_MAPPINGS,
+                    'tunnel_types': GOOD_TUNNEL_TYPES}
 
     GOOD_FP_INFO = {
         'product': 'virtual-accelerator',
@@ -54,8 +57,6 @@ class LBFPMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
         'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
         'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
         'supported_plugs': [VIF_OVS, VIF_BRIDGE],
-        'tunnel_types': GOOD_TUNNEL_TYPES,
-        'bridge_mappings': GOOD_MAPPINGS,
     }
 
     BAD_FP_INFO = {
@@ -67,25 +68,32 @@ class LBFPMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
         'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
         'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
         'supported_plugs': [VIF_OVS, VIF_BRIDGE],
-        'tunnel_types': BAD_TUNNEL_TYPES,
-        'bridge_mappings': BAD_MAPPINGS,
     }
 
     AGENTS = [{'alive': True,
                'configurations': GOOD_FP_INFO,
                'host': 'host',
-               'agent_type': AGENT_TYPE}]
+               'agent_type': AGENT_TYPE},
+              {'alive': True,
+               'configurations': GOOD_CONFIGS,
+               'host': 'host',
+               'agent_type': n_const.AGENT_TYPE_LINUXBRIDGE}]
     AGENTS_DEAD = [{'alive': False,
                     'configurations': GOOD_FP_INFO,
                     'host': 'dead_host',
-                    'agent_type': AGENT_TYPE}]
-    AGENTS_BAD = [{'alive': False,
-                   'configurations': GOOD_FP_INFO,
-                   'host': 'bad_host_1',
+                    'agent_type': AGENT_TYPE},
+                   {'alive': False,
+                    'configurations': GOOD_CONFIGS,
+                    'host': 'host',
+                    'agent_type': n_const.AGENT_TYPE_LINUXBRIDGE}]
+    AGENTS_BAD = [{'alive': True,
+                   'configurations': BAD_FP_INFO,
+                   'host': 'bad_host_2',
                    'agent_type': AGENT_TYPE},
                   {'alive': True,
-                   'configurations': BAD_FP_INFO,
-                   'host': 'bad_host_2'}]
+                   'configurations': GOOD_CONFIGS,
+                   'host': 'bad_host_2',
+                   'agent_type': n_const.AGENT_TYPE_LINUXBRIDGE}]
 
     def setUp(self):
         super(LBFPMechanismBaseTestCase, self).setUp()
@@ -95,25 +103,25 @@ class LBFPMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
 
 
 class LBFPMechanismGenericTestCase(LBFPMechanismBaseTestCase,
-                                   base.AgentMechanismGenericTestCase):
+                                   base.FPMechanismGenericTestCase):
     pass
 
 
 class LBFPMechanismLocalTestCase(LBFPMechanismBaseTestCase,
-                                 base.AgentMechanismLocalTestCase):
+                                 base.FPMechanismLocalTestCase):
     pass
 
 
 class LBFPMechanismFlatTestCase(LBFPMechanismBaseTestCase,
-                                base.AgentMechanismFlatTestCase):
+                                base.FPMechanismFlatTestCase):
     pass
 
 
 class LBFPMechanismVlanTestCase(LBFPMechanismBaseTestCase,
-                                base.AgentMechanismVlanTestCase):
+                                base.FPMechanismVlanTestCase):
     pass
 
 
 class LBFPMechanismGreTestCase(LBFPMechanismBaseTestCase,
-                               base.AgentMechanismGreTestCase):
+                               base.FPMechanismVlanTestCase):
     pass

@@ -13,23 +13,12 @@
 #    under the License.
 
 from oslo_config import cfg
-from oslo_config import types
 
 
 CONF = cfg.CONF
 
 vhostuser_group = cfg.OptGroup(name='vhostuser',
                                title='Vhostuser sockets options')
-mech_driver_group = cfg.OptGroup(name='ml2_fp',
-                                 title='ML2 FP plugin options')
-mech_driver_opts = [
-    cfg.Opt('tunnel_types',
-            type=types.List(item_type=str),
-            default=[],
-            help='Network tunnel types supported by the agent '
-                 '(gre, vxlan and/or geneve).'),
-]
-
 vhostuser_opts = [
     cfg.StrOpt('socket_dir',
                default='/tmp/',
@@ -43,6 +32,4 @@ vhostuser_opts = [
 ]
 
 CONF.register_group(vhostuser_group)
-CONF.register_group(mech_driver_group)
 CONF.register_opts(vhostuser_opts, group=vhostuser_group)
-CONF.register_opts(mech_driver_opts, group=mech_driver_group)
