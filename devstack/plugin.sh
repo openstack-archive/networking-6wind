@@ -16,7 +16,6 @@
 # start_fast_path
 # setup_develop networking-6wind
 # configure_nova_rootwrap
-# nova_enable_monkey_patch
 # configure_ml2_for_fast_path
 # stop_fast_path
 
@@ -50,12 +49,6 @@ function nova_set_hugepages_flavor {
     for flavor_id in $(nova flavor-list | awk '{print $2}' | grep [0-9]); do
         nova flavor-key $flavor_id set hw:mem_page_size=large
     done
-}
-
-function nova_enable_monkey_patch {
-    iniset $NOVA_CONF DEFAULT monkey_patch True
-    iniset $NOVA_CONF DEFAULT monkey_patch_modules \
-        nova.virt.libvirt.vif:networking_6wind.monkey_patch.vif.decorator
 }
 
 function nova_enable_vcpu_pinning {
