@@ -74,7 +74,7 @@ class NeutronFastPathAgent(manager.Manager):
         fp_info_dict['timestamp'] = timestamp
 
         try:
-            status = os.system('pidof fp-rte')
+            status = os.system('pidof fp-rte > /dev/null 2>&1')
             if status == 0:
                 fp_info_dict['active'] = True
             else:
