@@ -30,13 +30,8 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_service import loopingcall
 
-from pkg_resources import parse_version as V
 
 LOG = logging.getLogger(__name__)
-
-CFG_PATH = "/etc"
-PRODUCT_FILE = "6WIND_product"
-PRODUCT_VERSION_FILE = "6WIND_product_version"
 
 
 class NeutronFastPathAgent(manager.Manager):
@@ -52,13 +47,12 @@ class NeutronFastPathAgent(manager.Manager):
                                                              sock_mode))
         self.fp_info = {
             'timestamp': '',
-            'product': 'unknown',
-            'product_version': 'unknown',
+            'product': 'virtual-accelerator',
             'active': False,
             'vhostuser_socket_dir': sock_dir,
             'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
             'vhostuser_socket_mode': sock_mode,
-            'supported_plugs': [],
+            'supported_plugs': ['ovs', 'bridge', 'tap'],
         }
         self.agent_state = {
             'binary': 'neutron-fastpath-agent',
@@ -70,10 +64,6 @@ class NeutronFastPathAgent(manager.Manager):
         }
         self.ctx = context.get_admin_context_without_session()
         self._setup_rpc()
-        self.init_host()
-
-    def init_host(self):
-        self._init_fp_info()
 
     def _update_fp_status(self, fp_info_dict):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -87,30 +77,6 @@ class NeutronFastPathAgent(manager.Manager):
                 fp_info_dict['active'] = False
         except Exception:
             fp_info_dict['active'] = False
-
-    def _init_fp_info(self):
-        with open(os.path.join(CFG_PATH, PRODUCT_FILE)) as f:
-            self.fp_info['product'] = f.read(2048).rstrip()
-        with open(os.path.join(CFG_PATH, PRODUCT_VERSION_FILE)) as f:
-            self.fp_info['product_version'] = f.read(2048).rstrip()
-
-        self._update_fp_status(self.fp_info)
-
-        fp_product_version = self.fp_info['product_version']
-        if self.fp_info['product'] == 'virtual-accelerator':
-            self.fp_info['supported_plugs'] = ['ovs', 'bridge']
-            try:
-                if V(fp_product_version) >= V('1.4.0'):
-                    self.fp_info['supported_plugs'].append('tap')
-            except Exception:
-                pass
-        elif self.fp_info['product'] == '6windgate':
-            self.fp_info['supported_plugs'] = ['ovs', 'bridge']
-            try:
-                if V(fp_product_version) >= V('4.13.0'):
-                    self.fp_info['supported_plugs'].append('tap')
-            except Exception:
-                pass
 
     def _report_state(self):
         self._update_fp_status(self.fp_info)
