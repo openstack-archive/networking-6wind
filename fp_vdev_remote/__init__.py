@@ -1,5 +1,5 @@
-#    Copyright 2015 6WIND S.A.
-#    All Rights Reserved.
+# Copyright 2019 6WIND S.A.
+# All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,23 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import sys
 
-# vhostuser fp plug
-VIF_VHOSTUSER_FP_PLUG = 'vhostuser_fp_plug'
+if __name__ == '__main__':
+    try:
+        from fp_vdev_remote import vdev_remote
+        FP_REMOTE = True
+    except ImportError:
+        FP_REMOTE = False
 
-# prefix for vhostuser socket name
-VIF_VHOSTUSER_SOCKET_PREFIX = 'vhost-socket-'
-VIF_VHOSTUSER_SOCKET_DIR = '/tmp'
-VIF_VHOSTUSER_SOCKET_MODE = 'client'
-
-# base timestamp
-BASE_TIMESTAMP = '1970-01-01 00:00:00'
-
-# linuxbridge name prefix
-BRIDGE_PREFIX = 'brq'
-
-# fp agent type
-FP_AGENT_TYPE = '6WIND Fast Path agent'
-
-# path to fp-rcpd.sock
-FP_RPCD_SOCKET_PATH = '/run/openvswitch/fp-rpcd.sock'
+    if FP_REMOTE:
+        sys.exit(vdev_remote.main())
+    else:
+        sys.exit(1)

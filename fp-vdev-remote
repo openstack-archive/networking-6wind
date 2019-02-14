@@ -1,0 +1,3 @@
+#! /bin/sh
+DIR=$(dirname $0)
+PYTHONPATH=$DIR exec python -B -m fp_vdev_remote.__init__ $*
