@@ -15,6 +15,24 @@
 
 import os
 
+from fp_vdev_remote import vdev_utils
+
+from neutron.agent.common import utils as neutron_utils
+
+
+FP_VDEV_CMD = None
+
+
+def get_socket_settings():
+    global FP_VDEV_CMD
+    if FP_VDEV_CMD is None:
+        FP_VDEV_CMD = vdev_utils.get_vdev_cmd()
+    path = neutron_utils.execute(cmd=[FP_VDEV_CMD, 'get', 'sockfolder'],
+                                 run_as_root=True)
+    mode = neutron_utils.execute(cmd=[FP_VDEV_CMD, 'get', 'sockmode'],
+                                 run_as_root=True)
+    return (path.strip(), mode.strip())
+
 
 def get_vif_vhostuser_socket(socket_prefix, socket_dir, port_id):
     vhostuser_socket_name = socket_prefix + port_id

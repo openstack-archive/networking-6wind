@@ -1,9 +1,12 @@
-# The order of packages is significant, because pip processes them in the order
-# of appearance. Changing the order has an impact on the overall integration
-# process, which may cause wedges in the gate later.
-
-pbr>=1.6
-Babel>=1.3
-oslo.log>=1.8.0
--e git://git.openstack.org/openstack/neutron.git#egg=neutron
--e git://git.openstack.org/openstack/nova.git#egg=nova
+Sphinx>=1.4.9
+oslo.config>=4.8.0
+docutils>=0.14
+python_mimeparse>=1.6.0
+neutron_lib>=1.25.0
+neutron>=12.0.5
+oslo_config>=6.8.1
+oslo.i18n>=3.23.1
+oslo_log>=3.42.3
+oslo_service>=1.38.0
+wheel>=0.29.0
+git+https://github.com/6WIND/fp-vdev-remote.git#egg=fp-vdev-remote
