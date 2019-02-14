@@ -17,6 +17,7 @@ import os
 
 from networking_6wind._i18n import _LE
 from networking_6wind.common import constants
+from networking_6wind.common import utils
 
 from neutron.agent import rpc as agent_rpc
 from neutron import manager
@@ -31,7 +32,7 @@ from oslo_service import loopingcall
 
 from pkg_resources import parse_version as V
 
-cfg.CONF.import_group('vhostuser', 'networking_6wind.common.config')
+
 LOG = logging.getLogger(__name__)
 
 CFG_PATH = "/etc"
@@ -42,16 +43,22 @@ PRODUCT_VERSION_FILE = "6WIND_product_version"
 class NeutronFastPathAgent(manager.Manager):
 
     def __init__(self, host, conf=None):
-        self.conf = conf or cfg.CONF
-
+        try:
+            sock_dir, sock_mode = utils.get_socket_settings()
+        except Exception:
+            sock_dir = constants.VIF_VHOSTUSER_SOCKET_DIR
+            sock_mode = constants.VIF_VHOSTUSER_SOCKET_MODE
+            LOG.warning("Cannot get vhostuser socket info from fp-vdev, use "
+                        "default path '%s' and mode '%s'" % (sock_dir,
+                                                             sock_mode))
         self.fp_info = {
             'timestamp': '',
             'product': 'unknown',
             'product_version': 'unknown',
             'active': False,
-            'vhostuser_socket_dir': self.conf.vhostuser.socket_dir,
-            'vhostuser_socket_prefix': self.conf.vhostuser.socket_prefix,
-            'vhostuser_socket_mode': self.conf.vhostuser.mode,
+            'vhostuser_socket_dir': sock_dir,
+            'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+            'vhostuser_socket_mode': sock_mode,
             'supported_plugs': [],
         }
         self.agent_state = {
