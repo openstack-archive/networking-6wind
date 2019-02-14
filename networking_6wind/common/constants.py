@@ -14,14 +14,6 @@
 #    under the License.
 
 
-# vhostuser fp plug
-VIF_VHOSTUSER_FP_PLUG = 'vhostuser_fp_plug'
-
-# prefix for vhostuser socket name
-VIF_VHOSTUSER_SOCKET_PREFIX = 'vhost-socket-'
-VIF_VHOSTUSER_SOCKET_DIR = '/tmp'
-VIF_VHOSTUSER_SOCKET_MODE = 'client'
-
 # base timestamp
 BASE_TIMESTAMP = '1970-01-01 00:00:00'
 
@@ -33,3 +25,14 @@ FP_AGENT_TYPE = '6WIND Fast Path agent'
 
 # path to fp-rcpd.sock
 FP_RPCD_SOCKET_PATH = '/run/openvswitch/fp-rpcd.sock'
+
+# vhostuser socket settings
+VHOSTUSER_SOCKET_DIR = '/tmp'
+VHOSTUSER_SOCKET_MODE = 'client'
+VHOSTUSER_SOCKET_PREFIX = 'vhost-socket-'
+
+# vhostuser fp plug
+# duplicate this constant from nova.network.model.py,
+# in case of containerized setups: nova modules can be installed
+# in another container than neutron ML2 plugins
+VIF_DETAILS_VHOSTUSER_FP_PLUG = 'vhostuser_fp_plug'

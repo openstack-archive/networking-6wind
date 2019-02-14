@@ -17,7 +17,7 @@ from neutron_lib.plugins.ml2 import api
 from oslo_log import log
 
 from networking_6wind.common import constants
-from networking_6wind.common.utils import get_vif_vhostuser_socket
+from networking_6wind.common.utils import get_socket_path
 from neutron.plugins.ml2.drivers.openvswitch.mech_driver import (
     mech_openvswitch)
 
@@ -72,8 +72,8 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
     def get_vif_details(self, context, agent, segment):
         socket_prefix = self.fp_info['vhostuser_socket_prefix']
         socket_dir = self.fp_info['vhostuser_socket_dir']
-        socket = get_vif_vhostuser_socket(socket_prefix, socket_dir,
-                                          context.current['id'])
+        socket = get_socket_path(socket_prefix, socket_dir,
+                                 context.current['id'])
         qemu_mode = portbindings.VHOST_USER_MODE_CLIENT
         if self.fp_info['vhostuser_socket_mode'] == 'client':
             qemu_mode = portbindings.VHOST_USER_MODE_SERVER
@@ -82,6 +82,6 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         details_copy = self.vif_details.copy()
         details_copy[portbindings.VHOST_USER_SOCKET] = socket
         details_copy[portbindings.VHOST_USER_MODE] = qemu_mode
-        details_copy[constants.VIF_VHOSTUSER_FP_PLUG] = True
+        details_copy[constants.VIF_DETAILS_VHOSTUSER_FP_PLUG] = True
         details_copy[portbindings.VHOST_USER_OVS_PLUG] = True
         return details_copy

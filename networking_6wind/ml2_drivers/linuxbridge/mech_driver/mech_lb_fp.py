@@ -17,7 +17,7 @@ from neutron_lib.plugins.ml2 import api
 from oslo_log import log
 
 from networking_6wind.common import constants
-from networking_6wind.common.utils import get_vif_vhostuser_socket
+from networking_6wind.common.utils import get_socket_path
 from neutron.plugins.ml2.drivers.linuxbridge.mech_driver import (
     mech_linuxbridge)
 
@@ -72,8 +72,8 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
     def get_vif_details(self, context, agent, segment):
         socket_prefix = self.fp_info['vhostuser_socket_prefix']
         socket_dir = self.fp_info['vhostuser_socket_dir']
-        socket = get_vif_vhostuser_socket(socket_prefix, socket_dir,
-                                          context.current['id'])
+        socket = get_socket_path(socket_prefix, socket_dir,
+                                 context.current['id'])
         brg = constants.BRIDGE_PREFIX + context.network.current['id']
 
         if self.fp_info['vhostuser_socket_mode'] == 'client':
@@ -84,11 +84,11 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
         details_copy = self.vif_details.copy()
         details_copy[portbindings.VHOST_USER_SOCKET] = socket
         details_copy[portbindings.VHOST_USER_MODE] = qemu_mode
-        details_copy[constants.VIF_VHOSTUSER_FP_PLUG] = True
+        details_copy[constants.VIF_DETAILS_VHOSTUSER_FP_PLUG] = True
 
         # Workaroud to notify nova of bridge name to be used during
         # plug. This should not be necessary because Nova can detect
         # this bridge name, but some code is missing for the
-        # VIF_VHOSTUSER_FP_PLUG case (in nova/network/neutronv2/api.py)
+        # VHOSTUSER_FP_PLUG case (in nova/network/neutronv2/api.py)
         details_copy[portbindings.VIF_DETAILS_BRIDGE_NAME] = brg
         return details_copy
