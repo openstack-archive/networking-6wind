@@ -1,2 +1,0 @@
-[Filters]
-fp-vdev: CommandFilter, /usr/local/bin/fp-vdev, root
