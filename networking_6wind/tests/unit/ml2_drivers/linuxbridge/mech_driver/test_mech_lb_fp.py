@@ -16,7 +16,7 @@ from neutron_lib.api.definitions import portbindings
 from neutron_lib import constants as n_const
 
 from networking_6wind.common import constants
-from networking_6wind.common.utils import get_vif_vhostuser_socket
+from networking_6wind.common.utils import get_socket_path
 from networking_6wind.ml2_drivers.linuxbridge.mech_driver import mech_lb_fp
 from networking_6wind.tests.unit.ml2_drivers import _test_mech_agent as base
 
@@ -26,9 +26,8 @@ from neutron.tests.unit.plugins.ml2.drivers.linuxbridge.mech_driver import (
 
 class LBFPMechanismBaseTestCase(test_lb.LinuxbridgeMechanismBaseTestCase):
     mode = portbindings.VHOST_USER_MODE_SERVER
-    socket = get_vif_vhostuser_socket(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
-                                      constants.VIF_VHOSTUSER_SOCKET_DIR,
-                                      base.PORT_ID)
+    socket = get_socket_path(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+                             constants.VIF_VHOSTUSER_SOCKET_DIR, base.PORT_ID)
     br_name = constants.BRIDGE_PREFIX + base.NETWORK_ID
 
     VIF_TYPE = portbindings.VIF_TYPE_VHOST_USER
