@@ -34,6 +34,6 @@ def get_socket_settings():
     return (path.strip(), mode.strip())
 
 
-def get_vif_vhostuser_socket(socket_prefix, socket_dir, port_id):
+def get_socket_path(socket_prefix, socket_dir, port_id):
     vhostuser_socket_name = socket_prefix + port_id
     return os.path.join(socket_dir, vhostuser_socket_name)

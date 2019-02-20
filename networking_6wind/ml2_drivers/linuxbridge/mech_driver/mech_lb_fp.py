@@ -17,7 +17,7 @@ from neutron_lib.plugins.ml2 import api
 from oslo_log import log
 
 from networking_6wind.common import constants
-from networking_6wind.common.utils import get_vif_vhostuser_socket
+from networking_6wind.common.utils import get_socket_path
 from neutron.plugins.ml2.drivers.linuxbridge.mech_driver import (
     mech_linuxbridge)
 
@@ -72,8 +72,8 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
     def get_vif_details(self, context, agent, segment):
         socket_prefix = self.fp_info['vhostuser_socket_prefix']
         socket_dir = self.fp_info['vhostuser_socket_dir']
-        socket = get_vif_vhostuser_socket(socket_prefix, socket_dir,
-                                          context.current['id'])
+        socket = get_socket_path(socket_prefix, socket_dir,
+                                 context.current['id'])
         brg = constants.BRIDGE_PREFIX + context.network.current['id']
 
         if self.fp_info['vhostuser_socket_mode'] == 'client':
