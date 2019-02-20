@@ -1,0 +1,3 @@
+[Filters]
+fp-vdev: CommandFilter, fp-vdev, root
+fp-vdev-remote: CommandFilter, fp-vdev-remote, root
