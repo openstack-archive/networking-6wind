@@ -18,7 +18,7 @@ from neutron_lib import constants as n_const
 from oslo_config import cfg
 
 from networking_6wind.common import constants
-from networking_6wind.common.utils import get_vif_vhostuser_socket
+from networking_6wind.common.utils import get_socket_path
 from networking_6wind.ml2_drivers.openvswitch.mech_driver import mech_ovs_fp
 from networking_6wind.tests.unit.ml2_drivers import _test_mech_agent as base
 
@@ -28,9 +28,8 @@ from neutron.tests.unit.plugins.ml2.drivers.openvswitch.mech_driver import (
     test_mech_openvswitch as test_ovs)
 
 mode = portbindings.VHOST_USER_MODE_SERVER
-socket = get_vif_vhostuser_socket(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
-                                  constants.VIF_VHOSTUSER_SOCKET_DIR,
-                                  base.PORT_ID)
+socket = get_socket_path(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+                         constants.VIF_VHOSTUSER_SOCKET_DIR, base.PORT_ID)
 
 
 class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
