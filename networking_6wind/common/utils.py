@@ -28,9 +28,9 @@ def get_socket_settings():
     if FP_VDEV_CMD is None:
         FP_VDEV_CMD = vdev_utils.get_vdev_cmd()
     path = neutron_utils.execute(cmd=[FP_VDEV_CMD, 'get', 'sockfolder'],
-                         run_as_root=True)
+                                 run_as_root=True)
     mode = neutron_utils.execute(cmd=[FP_VDEV_CMD, 'get', 'sockmode'],
-                         run_as_root=True)
+                                 run_as_root=True)
     return (path.strip(), mode.strip())
 
 
