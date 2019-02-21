@@ -28,21 +28,21 @@ from neutron.tests.unit.plugins.ml2.drivers.openvswitch.mech_driver import (
     test_mech_openvswitch as test_ovs)
 
 mode = portbindings.VHOST_USER_MODE_SERVER
-socket = get_socket_path(constants.VIF_VHOSTUSER_SOCKET_PREFIX,
-                         constants.VIF_VHOSTUSER_SOCKET_DIR, base.PORT_ID)
+socket = get_socket_path(constants.VHOSTUSER_SOCKET_PREFIX,
+                         constants.VHOSTUSER_SOCKET_DIR, base.PORT_ID)
 
 
 class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
     VIF_TYPE = portbindings.VIF_TYPE_VHOST_USER
 
     VIF_OVS = portbindings.VIF_TYPE_OVS
-
     VIF_BRIDGE = portbindings.VIF_TYPE_BRIDGE
+    VIF_TAP = portbindings.VIF_TYPE_TAP
 
     VIF_DETAILS = {portbindings.OVS_DATAPATH_TYPE: a_const.OVS_DATAPATH_SYSTEM,
                    portbindings.CAP_PORT_FILTER: True,
                    portbindings.OVS_HYBRID_PLUG: True,
-                   constants.VIF_VHOSTUSER_FP_PLUG: True,
+                   constants.VIF_DETAILS_VHOSTUSER_FP_PLUG: True,
                    portbindings.VHOST_USER_OVS_PLUG: True,
                    portbindings.VHOST_USER_MODE: mode,
                    portbindings.VHOST_USER_SOCKET: socket}
@@ -58,8 +58,8 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
         'product_version': '4.0',
         'timestamp': constants.BASE_TIMESTAMP,
         'active': True,
-        'vhostuser_socket_dir': constants.VIF_VHOSTUSER_SOCKET_DIR,
-        'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+        'vhostuser_socket_dir': constants.VHOSTUSER_SOCKET_DIR,
+        'vhostuser_socket_prefix': constants.VHOSTUSER_SOCKET_PREFIX,
         'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
         'supported_plugs': [VIF_OVS, VIF_BRIDGE],
     }
@@ -69,10 +69,10 @@ class OVSFPMechanismBaseTestCase(test_ovs.OpenvswitchMechanismBaseTestCase):
         'product_version': 'unknown',
         'timestamp': constants.BASE_TIMESTAMP,
         'active': False,
-        'vhostuser_socket_dir': constants.VIF_VHOSTUSER_SOCKET_DIR,
-        'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+        'vhostuser_socket_dir': constants.VHOSTUSER_SOCKET_DIR,
+        'vhostuser_socket_prefix': constants.VHOSTUSER_SOCKET_PREFIX,
         'vhostuser_socket_mode': portbindings.VHOST_USER_MODE_CLIENT,
-        'supported_plugs': [VIF_OVS, VIF_BRIDGE],
+        'supported_plugs': [VIF_OVS, VIF_BRIDGE, VIF_TAP],
     }
 
     AGENTS = [{'alive': True,
@@ -111,7 +111,7 @@ class OVSFPMechanismSGDisabledBaseTestCase(OVSFPMechanismBaseTestCase):
     VIF_DETAILS = {portbindings.OVS_DATAPATH_TYPE: a_const.OVS_DATAPATH_SYSTEM,
                    portbindings.CAP_PORT_FILTER: False,
                    portbindings.OVS_HYBRID_PLUG: False,
-                   constants.VIF_VHOSTUSER_FP_PLUG: True,
+                   constants.VIF_DETAILS_VHOSTUSER_FP_PLUG: True,
                    portbindings.VHOST_USER_OVS_PLUG: True,
                    portbindings.VHOST_USER_MODE: mode,
                    portbindings.VHOST_USER_SOCKET: socket}
