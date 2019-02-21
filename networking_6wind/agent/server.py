@@ -46,8 +46,8 @@ class NeutronFastPathAgent(manager.Manager):
         try:
             sock_dir, sock_mode = utils.get_socket_settings()
         except Exception:
-            sock_dir = constants.VIF_VHOSTUSER_SOCKET_DIR
-            sock_mode = constants.VIF_VHOSTUSER_SOCKET_MODE
+            sock_dir = constants.VHOSTUSER_SOCKET_DIR
+            sock_mode = constants.VHOSTUSER_SOCKET_MODE
             LOG.warning("Cannot get vhostuser socket info from fp-vdev, use "
                         "default path '%s' and mode '%s'" % (sock_dir,
                                                              sock_mode))
@@ -57,7 +57,7 @@ class NeutronFastPathAgent(manager.Manager):
             'product_version': 'unknown',
             'active': False,
             'vhostuser_socket_dir': sock_dir,
-            'vhostuser_socket_prefix': constants.VIF_VHOSTUSER_SOCKET_PREFIX,
+            'vhostuser_socket_prefix': constants.VHOSTUSER_SOCKET_PREFIX,
             'vhostuser_socket_mode': sock_mode,
             'supported_plugs': [],
         }
