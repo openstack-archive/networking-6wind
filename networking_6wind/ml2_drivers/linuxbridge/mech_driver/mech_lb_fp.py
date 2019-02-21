@@ -84,11 +84,11 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
         details_copy = self.vif_details.copy()
         details_copy[portbindings.VHOST_USER_SOCKET] = socket
         details_copy[portbindings.VHOST_USER_MODE] = qemu_mode
-        details_copy[constants.VIF_VHOSTUSER_FP_PLUG] = True
+        details_copy[constants.VIF_DETAILS_VHOSTUSER_FP_PLUG] = True
 
         # Workaroud to notify nova of bridge name to be used during
         # plug. This should not be necessary because Nova can detect
         # this bridge name, but some code is missing for the
-        # VIF_VHOSTUSER_FP_PLUG case (in nova/network/neutronv2/api.py)
+        # VHOSTUSER_FP_PLUG case (in nova/network/neutronv2/api.py)
         details_copy[portbindings.VIF_DETAILS_BRIDGE_NAME] = brg
         return details_copy
