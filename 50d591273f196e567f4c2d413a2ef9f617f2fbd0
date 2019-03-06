@@ -1,0 +1,10 @@
+Code-Review+2: Maxime Leroy <maxime.leroy@6wind.com>
+Code-Review+1: Valentina Krasnobaeva <valentina.krasnobaeva@6wind.com>
+Code-Review+1: Vieri <15050873171@163.com>
+Workflow+1: Maxime Leroy <maxime.leroy@6wind.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Wed, 06 Mar 2019 10:24:28 +0000
+Reviewed-on: https://review.openstack.org/636974
+Project: openstack/networking-6wind
+Branch: refs/heads/master
