@@ -1,0 +1,7 @@
+fp-vdev-remote
+python-neutron
+python2-neutron-lib
+python2-oslo-log
+python2-oslo-config
+python2-oslo-service
+python2-oslo-i18n
