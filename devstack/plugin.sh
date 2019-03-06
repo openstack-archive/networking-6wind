@@ -51,11 +51,6 @@ function nova_set_hugepages_flavor {
     done
 }
 
-function nova_enable_vcpu_pinning {
-    pin_set=$(python /usr/local/bin/get_vcpu_pin_set.py)
-    iniset $NOVA_CONF DEFAULT vcpu_pin_set "$pin_set"
-}
-
 # main loop
 if is_service_enabled net-6wind; then
     source $NET_6WIND_DIR/devstack/libs/fast-path
@@ -75,7 +70,6 @@ if is_service_enabled net-6wind; then
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         if is_service_enabled n-cpu; then
             create_nova_rootwrap
-            nova_enable_vcpu_pinning
         fi
 
         if is_service_enabled neutron-agent; then
