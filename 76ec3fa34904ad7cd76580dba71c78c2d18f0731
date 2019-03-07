@@ -1,0 +1,8 @@
+Code-Review+2: Maxime Leroy <maxime.leroy@6wind.com>
+Workflow+1: Maxime Leroy <maxime.leroy@6wind.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Thu, 07 Mar 2019 18:24:20 +0000
+Reviewed-on: https://review.openstack.org/637014
+Project: openstack/networking-6wind
+Branch: refs/heads/master
