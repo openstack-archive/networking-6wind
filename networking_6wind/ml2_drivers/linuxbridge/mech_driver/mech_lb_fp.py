@@ -47,6 +47,11 @@ class LBFPMechanismDriver(mech_linuxbridge.LinuxbridgeMechanismDriver):
         return None
 
     def try_to_bind_segment_for_agent(self, context, segment, agent):
+        if portbindings.VNIC_DIRECT in \
+            context.current.get(portbindings.VNIC_TYPE):
+            LOG.error("Refusing to bind SR-IOV port %s" %
+                      context.current['id'])
+            return False
         lb_agent = self._get_lb_agent(context)
         if lb_agent is None:
             LOG.error("Refusing to bind port %s due to "
