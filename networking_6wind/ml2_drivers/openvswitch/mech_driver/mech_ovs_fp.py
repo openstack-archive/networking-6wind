@@ -38,6 +38,7 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
         super(OVSFPMechanismDriver, self).__init__()
         self.agent_type = constants.FP_AGENT_TYPE
         self.fp_info = None
+        self.supported_vnic_types = [portbindings.VNIC_NORMAL]
 
     def _get_ovs_agent(self, context):
         for agent in context.host_agents(n_constants.AGENT_TYPE_OVS):
