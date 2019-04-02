@@ -14,6 +14,7 @@
 from neutron_lib.api.definitions import portbindings
 from neutron_lib import constants as n_constants
 from neutron_lib.plugins.ml2 import api
+from oslo_config import cfg
 from oslo_log import log
 
 from networking_6wind.common import constants
@@ -22,6 +23,7 @@ from neutron.plugins.ml2.drivers.openvswitch.mech_driver import (
     mech_openvswitch)
 
 LOG = log.getLogger(__name__)
+cfg.CONF.import_group('ovs_fp', 'networking_6wind.common.config')
 
 
 class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
@@ -36,6 +38,7 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
 
     def __init__(self):
         super(OVSFPMechanismDriver, self).__init__()
+        self.conf = cfg.CONF.ovs_fp
         self.agent_type = constants.FP_AGENT_TYPE
         self.fp_info = None
         self.supported_vnic_types = [portbindings.VNIC_NORMAL]
@@ -46,15 +49,21 @@ class OVSFPMechanismDriver(mech_openvswitch.OpenvswitchMechanismDriver):
                 return agent
         return None
 
+    def _check_segment_for_agent(self, segment, ovs_agent=None):
+        if ovs_agent:
+            return self.check_segment_for_agent(segment, ovs_agent)
+        network_type = segment[api.NETWORK_TYPE]
+        return network_type in self.conf.allowed_network_types
+
     def try_to_bind_segment_for_agent(self, context, segment, agent):
         ovs_agent = self._get_ovs_agent(context)
-        if ovs_agent is None:
+        if ovs_agent is None and self.conf.ovs_agent_required:
             LOG.error("Refusing to bind port %s due to dead "
                       "neutron-openvswitch-agent" % context.current['id'])
             return False
-        # pass ovs_agent, because it contains supported tunnel type in its
-        # 'configurations' dict
-        if not self.check_segment_for_agent(segment, ovs_agent):
+        # pass ovs_agent if exists, because it contains supported tunnel types
+        # from its 'configurations' dict, otherwise use ovs_fp conf
+        if not self._check_segment_for_agent(segment, ovs_agent):
             return False
         LOG.debug("Trying to retrieve fp_info from %s..." % agent)
         self.fp_info = agent.get('configurations')
